@@ -1,6 +1,5 @@
 name: Build GDExtension
-on:
-  workflow_call:
+on: [workflow_call]
 
 env:
   LIBNAME: gde-v
