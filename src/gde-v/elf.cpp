@@ -6,7 +6,7 @@
 
 using namespace godot;
 
-uint64_t get_value_by_bitsize_unsafe(PackedByteArray data, int64_t offset, int64_t field_size){
+static inline uint64_t get_value_by_bitsize_unsafe(PackedByteArray data, int64_t offset, int64_t field_size){
     switch(field_size){
         case 1: return data.decode_u8(offset);
         case 2: return data.decode_u16(offset);
@@ -16,6 +16,11 @@ uint64_t get_value_by_bitsize_unsafe(PackedByteArray data, int64_t offset, int64
     }
 }
 
+//------------- Static ------------------------------------------------------------------------
+
+/**
+ * Binds this class into Godot. See RVBusDevice::_bind_methods for more info.
+ */
 void ElfHeader::_bind_methods(){
     BIND_GET_SET(magic, ElfHeader, PACKED_BYTE_ARRAY, "new_val")
     BIND_GET_SET(bit_size, ElfHeader, INT, "new_val")
@@ -38,6 +43,7 @@ void ElfHeader::_bind_methods(){
     BIND_GET_SET(section_header_name_index, ElfHeader, INT, "new_val")
 
     ClassDB::bind_method(D_METHOD("get_pointer_size"), &ElfHeader::get_pointer_size);
+    ClassDB::bind_method(D_METHOD("get_expected_header_size"), &ElfHeader::get_expected_header_size);
     ClassDB::bind_method(D_METHOD("is_valid"), &ElfHeader::is_valid);
 
     BIND_ENUM_CONSTANT(MAGIC)
@@ -86,6 +92,9 @@ void ElfHeader::_bind_methods(){
     ClassDB::bind_static_method("ElfHeader", D_METHOD("load_header", "data"), &ElfHeader::load_header);
 }
 
+/**
+ * Binds this class into Godot. See RVBusDevice::_bind_methods for more info.
+ */
 void ElfProgramHeader::_bind_methods(){
     BIND_GET_SET(type, ElfProgramHeader, INT, "new_val")
     BIND_GET_SET(flags, ElfProgramHeader, INT, "new_val")
@@ -138,6 +147,11 @@ void ElfProgramHeader::_bind_methods(){
     ClassDB::bind_static_method("ElfProgramHeader", D_METHOD("load_program_headers", "header", "data"), &ElfProgramHeader::load_program_headers);
 }
 
+//------------- Member ------------------------------------------------------------------------
+
+/**
+ * Default the values.
+ */
 ElfHeader::ElfHeader(){
     this->magic = PackedByteArray();
     endianness = Endianness::INVALID_ENDIANNESS;
@@ -151,12 +165,9 @@ ElfHeader::ElfHeader(){
     section_header_name_index = 0;
 }
 
-uint64_t ElfHeader::get_expected_header_size(BitSize test_bit_size){
-    if(test_bit_size == BitSize::SIZE_32) return 52;
-    else if(test_bit_size == BitSize::SIZE_64) return 64;
-    else return -1;
-}
-
+/**
+ * Loads a header from passed in data into an ElfHeader. Returns nullptr on error.
+ */
 Ref<ElfHeader> ElfHeader::load_header(PackedByteArray data){
     if(data.size() <= Offsets::BIT_SIZE) return nullptr;
     uint8_t in_bit_size = data.decode_u8(Offsets::BIT_SIZE);
@@ -164,9 +175,11 @@ Ref<ElfHeader> ElfHeader::load_header(PackedByteArray data){
     uint8_t ptr_size = in_bit_size == 1 ? 4 : 8;
     uint8_t bit_fixer = in_bit_size == 1 ? 0 : 4; // this will be used to do offset+bit_fixer*i
 
-    if(data.size() < ElfHeader::get_expected_header_size(BitSize(in_bit_size)))
+    // Header is too small for what the header says it is.
+    if(data.size() < ElfHeader::get_expected_header_size_s(BitSize(in_bit_size)))
 		return nullptr;
     
+    // Load all the values in from the data.
     Ref<ElfHeader> ret_value;
     ret_value.instantiate();
     ret_value->magic = data.slice(0, 4);
@@ -192,9 +205,11 @@ Ref<ElfHeader> ElfHeader::load_header(PackedByteArray data){
     ret_value->machine = get_value_by_bitsize_unsafe(data, Offsets::MACHINE, 2);
     ret_value->elf_version = get_value_by_bitsize_unsafe(data, Offsets::ELF_VERSION, 4);
     ret_value->entry_point = get_value_by_bitsize_unsafe(data, Offsets::ENTRY_BASE, ptr_size);
+    // Starting here, the offsets differ because these are pointers. First one is off by 4, then 8, then 12.
+    // Above we set bit_fixer to 0 for 32 bit, so it just uses the address.
     ret_value->program_header_offset = get_value_by_bitsize_unsafe(data, Offsets::PH_OFF_BASE + bit_fixer, ptr_size);
     ret_value->section_header_offset = get_value_by_bitsize_unsafe(data, Offsets::SH_OFF_BASE + (bit_fixer*2), ptr_size);
-    //it ends at 3 items to fix for
+    // It ends at 3 items to fix for, cause 3 pointers read in.
     bit_fixer *= 3;
     ret_value->flags = get_value_by_bitsize_unsafe(data, Offsets::FLAGS_BASE+bit_fixer, 4);
     ret_value->header_size = get_value_by_bitsize_unsafe(data, Offsets::HEADER_SIZE_BASE+bit_fixer, 2);
@@ -215,6 +230,9 @@ ElfProgramHeader::ElfProgramHeader(){
     align = 0;
 }
 
+/**
+ * Creates a dictionary of the offsets needed, cause static dicts are not a thing.
+ */
 Dictionary ElfProgramHeader::get_offsets(bool is_64){
     Dictionary ret;
     if(is_64){
@@ -239,24 +257,35 @@ Dictionary ElfProgramHeader::get_offsets(bool is_64){
     return ret;
 }
 
+/**
+ * Loads all headers from passed in data into an array of ElfProgramHeader. Returns empty array on error.
+ */
 TypedArray<ElfProgramHeader> ElfProgramHeader::load_program_headers(Ref<ElfHeader> header, PackedByteArray data){
     TypedArray<ElfProgramHeader> ret_array;
 
+    // Where the program headers start, and how big they are, since they're concurrent in memory.
     uint16_t ph_offset = header->get_program_header_offset(), ph_count = header->get_program_header_count();
     uint16_t ph_entry_size = header->get_program_header_entry_size();
 
+    // If the end of the list of headers is invalid, or there isn't enough size in the input
+    // for all the headers, return.
     int64_t offset_end = ph_offset + (ph_count * ph_entry_size);
     if(ph_entry_size <= 0  || ph_count <= 0 || offset_end >= data.size()){
         return ret_array;
     }
     
+    // Pull out the data.
     PackedByteArray sub_data = data.slice(header->get_program_header_offset(), offset_end);
     uint8_t header_size = header->get_bit_size() == 1 ? 0x20 : 0x38;
 
+    Dictionary offsets = ElfProgramHeader::get_offsets(header->get_bit_size() == 2);
+
+    // For each header defined, grab it's values, load it into a new reference, and add the
+    // reference to the return array.
     for(int64_t i = 0; i < ph_count; i++){
         Ref<ElfProgramHeader> cur_header;
         cur_header.instantiate();
-        Dictionary offsets = ElfProgramHeader::get_offsets(header->get_bit_size() == 2);
+
         uint64_t cur_offset = i * header_size;
         uint32_t temp_type = get_value_by_bitsize_unsafe(sub_data, (int64_t)offsets["type"]+cur_offset, 4);
         if(temp_type <= HeaderType::TLS || temp_type == HeaderType::LOW_OS || temp_type == HeaderType::HIGH_OS

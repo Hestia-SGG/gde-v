@@ -9,26 +9,35 @@
 
 namespace godot{
 
+/**
+ * Definition for an ELF header. Implemented as a Resource so it can be saved off if wanted.
+ */
 class ElfHeader : public Resource{
     GDCLASS(ElfHeader, Resource)
 
 protected:
+    // Standard Godot binding method to let it know about our class.
     static void _bind_methods();
 
 public:
+    // Gives all of the offsets for the header. Ones that end in _BASE define the 32bit version
+    // from which the 64 bit version is calculated.
     enum Offsets{ MAGIC = 0, BIT_SIZE = 4, ENDIANNESS = 5, VERSION = 6, OS_ABI = 7, ABI_VER = 8,
         PAD_1_BEGIN = 9, TYPE = 0x10, MACHINE = 0x12, ELF_VERSION = 0x14, ENTRY_BASE = 0x18,
         PH_OFF_BASE = 0x1C, SH_OFF_BASE = 0x20, FLAGS_BASE = 0x24, HEADER_SIZE_BASE = 0x28,
         PH_ENT_SIZE_BASE = 0x2A, PH_NUM_BASE = 0x2C, SH_ENT_SIZE_BASE = 0x2E, SH_NUM_BASE = 0x30,
         SECTION_HEADER_NAME_INDX_BASE = 0x32, END_BASE = 0x34 };
+    // Definitions for types of endianness.
     enum Endianness{ LITTLE = 1, BIG = 2, INVALID_ENDIANNESS = 0 };
+    // Definitions for bit size. Try to use these instead of 32 or 64.
     enum BitSize{ SIZE_32 = 1, SIZE_64 = 2, INVALID_BITSIZE = 0 };
+    // The type of object this is. The _RANGE values are used to indicate the loaded thing is a value
+    // in there. This isn't really good, but TODO fix it.
     enum ObjectType{ INVALID_OBJTYPE = -1, NONE = 0, RELOC = 1, EXEC = 2, SHARED = 3,
         DYNAMIC = 3, CORE = 4, LOW_OS = 0xFE00, OS_RANGE = 0xFE01, HIGH_OS = 0xFEFF,
         LOW_PROC = 0xFF00, PROC_RANGE = 0xFF01, HIGH_PROC = 0xFFFF };
 
 protected:
-
     Variant magic;
     BitSize bit_size;
     Endianness endianness;
@@ -40,6 +49,9 @@ protected:
     int64_t section_header_entry_size, section_header_count;
     uint64_t section_header_name_index;
 
+    /**
+     * Gets this object as a dictionary of parameters. Used for the _to_string method.
+     */
     Dictionary get_str_params(){
         Dictionary ret;
         ret["magic"] = magic;
@@ -69,6 +81,9 @@ public:
     ElfHeader();
     ~ElfHeader(){}
 
+    /**
+     * Get/set for the fields.
+     */
     GET_SET(magic, PackedByteArray)
     GET_SET(bit_size, BitSize)
     GET_SET(endianness, Endianness)
@@ -89,19 +104,37 @@ public:
     GET_SET(section_header_count, int64_t)
     GET_SET(section_header_name_index, int64_t)
 
+    // Use the static version
     int64_t get_pointer_size(){
-        if(bit_size == BitSize::SIZE_32) return 4;
-		else if(bit_size == BitSize::SIZE_64) return 8;
+        return ElfHeader::get_pointer_size_s(this->bit_size);
+    }
+
+    // Returns how big a pointer is, so we can try not to hardcode the check everywhere.
+    static int64_t get_pointer_size_s(BitSize test_bit_size){
+        if(test_bit_size == BitSize::SIZE_32) return 4;
+		else if(test_bit_size == BitSize::SIZE_64) return 8;
 		else return 0;
     }
 
-    static uint64_t get_expected_header_size(BitSize test_bit_size);
+    // Use the static version
+    int64_t get_expected_header_size(){
+        return ElfHeader::get_expected_header_size_s(this->bit_size);
+    }
 
+    // Returns how big the header should be based on bit size.
+    static uint64_t get_expected_header_size_s(BitSize test_bit_size){
+        if(test_bit_size == BitSize::SIZE_32) return 52;
+        else if(test_bit_size == BitSize::SIZE_64) return 64;
+        else return -1;
+    }
+
+    // Returns if this object is a valid ELF header. Mainly just checks if they're not -1, other than header.
     bool is_valid(){
+        // WHY CAN'T WE DO STATIC CONST PACKEDBYTEARRAY?!?!
         PackedByteArray _good_magic = PackedByteArray({0x7F, 0x45, 0x4C, 0x46});
 
         return magic.get_type() == Variant::PACKED_BYTE_ARRAY && ((PackedByteArray)magic) == _good_magic
-            && bit_size != -1 && endianness != Endianness::INVALID_ENDIANNESS
+            && bit_size != BitSize::INVALID_BITSIZE && endianness != Endianness::INVALID_ENDIANNESS
 			&& version != -1 && abi_version != -1 && type != ObjectType::INVALID_OBJTYPE
 			&& machine != -1 && elf_version != -1 && entry_point != -1
 			&& program_header_offset != -1 && section_header_offset != -1
@@ -110,21 +143,29 @@ public:
 			&& section_header_count != -1 && section_header_name_index != -1;
     }
 
+    // Convert this into a string.
     String _to_string(){
         String header_print_formatter = "Magic: {magic}\nBit Size: {bit_size}\nEndianness: {endianness}\nVersion: {version}\nOS ABI: {os_abi}\nABI Version: {abi_version}\nType: {type}\nMachine: {machine}\nElf Version : {elf_version}\nEntry Point: 0x{entry_point}\nProgram Header Offset: 0x{program_header_offset}\nSection Header Offset: 0x{section_header_offset}\nFlags: {flags}\nHeader Size: {header_size}\nProgram Header Entry Size: {program_header_entry_size}\nProgram Header Count: {program_header_count}\nSection Header Entry Size: {section_header_entry_size}\nSection Header Count: {section_header_count}\nSection Header Name Index: {section_header_name_index}\nValid: {valid}";
         return header_print_formatter.format(this->get_str_params());
     }
 
+    // Load a header from the given data slice.
     static Ref<ElfHeader> load_header(PackedByteArray data);
 };
 
+/**
+ * Base class for a Program Header in an ELF.
+ */
 class ElfProgramHeader : public Resource{
     GDCLASS(ElfProgramHeader, Resource)
 
 public:
+    // Because the offsets are so different, easier to just define them for 32 and 64 bits.
     enum Offsets_32 { TYPE_32 = 0x00, FLAGS_32 = 0x18, OFFSET_32 = 0x04, VADDR_32 = 0x08, PADDR_32 = 0x0C, FILESZ_32 = 0x10, MEMSZ_32 = 0x14, ALIGN_32 = 0x1C };
 	enum Offsets_64 { TYPE_64 = 0x00, FLAGS_64 = 0x04, OFFSET_64 = 0x08, VADDR_64 = 0x10, PADDR_64 = 0x18, FILESZ_64 = 0x20, MEMSZ_64 = 0x28, ALIGN_64 = 0x30 };
-	enum HeaderType { PH_NULL = 0, LOAD = 1, DYNAMIC = 2, INTERP = 3, NOTE = 4,
+	// The type of header this is. The _RANGE values are used to indicate the loaded thing is a value
+    // in there. This isn't really good, but TODO fix it.
+    enum HeaderType { PH_NULL = 0, LOAD = 1, DYNAMIC = 2, INTERP = 3, NOTE = 4,
 		SHLIB = 5, PHDR = 6, TLS = 7, LOW_OS = 0x60000000, OS_RANGE = 0x60000001,
 		HIGH_OS = 0x6FFFFFFF, LOW_PROC = 0x70000000, PROC_RANGE = 0x70000001,
 		HIGH_PROC = 0x7FFFFFFF };
@@ -143,11 +184,13 @@ protected:
 	int64_t align;
 
 public:
+    // Gets the offsets, for either 32 or 64 bit, since we can't static const allocate these.
     static Dictionary get_offsets(bool is_64);
 
     ElfProgramHeader();
     ~ElfProgramHeader(){}
 
+    // Get/set for the properties.
     GET_SET(type, HeaderType)
     GET_SET(flags, int64_t)
     GET_SET(file_offset, int64_t)
@@ -157,6 +200,7 @@ public:
     GET_SET(size_in_memory, int64_t)
     GET_SET(align, int64_t)
 
+    // Determines if this header is valid.
     bool is_valid(){
 		bool test_align = false;
 		if(align == 0 || align == 1) test_align = true;
@@ -167,9 +211,16 @@ public:
 			&& test_align;
     }
 
+    // Loads all the arrays in the data slice. Use the header to know the offset to start and bit size. MUST NOT BE SLICE,
+    // must be whole file.
     static TypedArray<ElfProgramHeader> ElfProgramHeader::load_program_headers(Ref<ElfHeader> header, PackedByteArray data);
 };
 
+/**
+ * Represents a full ELF file.
+ * 
+ * TODO: Implement reading segments and handling the full RISC-V extras.
+ */
 class ElfFile : public Resource{
     GDCLASS(ElfFile, Resource)
 protected:
@@ -181,85 +232,34 @@ protected:
     PackedByteArray raw_data;
     bool loaded;
 public:
-    ElfFile();
-    ~ElfFile();
+    ElfFile(){}
+    ~ElfFile(){}
 
     GET_NOSET(header, Ref<ElfHeader>)
     GET_NOSET(program_headers, TypedArray<ElfProgramHeader>)
     GET_NOSET(loaded, bool)
 
+    // Loads a header from the given data. Broken out so that it can be reset with new info
+    // during runtime.
     void load_data(Variant data);
 
+    // Returns this turned into a printable string.
+    // TODO: Add the rest of the info.
     String _to_string(){ return "Header:\n\n" + header->to_string(); }
 
+    // Generates the list of memory areas needed to be created. The Dictionary will be of the format:
+    // {address_1: Ref<RVBusDevice>, address_2: Ref<RVBusDevice>, ..., address_n: Ref<RVBusDevice>}
+    // where address_n is an int whose value is 0 <= address_n <= 0xFFFFFFFF
     Dictionary generate_memory_areas();
 
+    // Load an ELF file by creating a new instance, calling load_data, and returning.
+    // On error, returns nullptr
     static Ref<ElfFile> load_elf_data(Variant data);
 };
 
-/*
-class ElfFile extends Resource:
-	var _internal_data : PackedByteArray
-	var _internal_elf_valid : bool
-	var elf_valid : bool : get = get_elf_valid, set = _ignore_set
-	
-	var _header : ElfHeader
-	var _header_cached : bool
-	var program_headers : Array[ElfProgramHeader]
-	
-	func _init():
-		_header = ElfHeader.new()
-		_internal_elf_valid = false
-		_header_cached = false
-		program_headers = []
-	
-	func get_elf_valid():
-		return _internal_elf_valid
-	
-	func _ignore_set(_value):
-		pass
-	
-	func _to_string():
-		return "Header:\n\n" + _header.to_string()
-	
-	func generate_memory_areas():
-		var ret_dict : Dictionary = {}
-		
-		for ph in program_headers:
-			#var cur_device : RVMemoryDevice = RVMemoryDevice.new()
-			if not ph.is_valid(): continue
-			if ph.size_in_memory <= 0: continue
-			
-			var start = ph.file_offset
-			var end = start + ph.size_in_file
-			var data_buffer : PackedByteArray = _internal_data.slice(start, end)
-			var new_device = RVMemoryDevice.create_from_buffer(data_buffer, ph.size_in_memory)
-			
-			new_device.read_only = (ph.flags & ElfProgramHeader.Flags.WRITEABLE) == 0
-			
-			ret_dict[ph.physical_address] = new_device
-		
-		return ret_dict
-	
-	static func load_elf_file(data: PackedByteArray) -> ElfFile:
-		var to_return = ElfFile.new()
-		
-		to_return._internal_data = data
-		to_return._header = ElfHeader.load_header(data)
-		
-		if to_return._header:
-			to_return._internal_elf_valid = to_return._header.is_valid()
-		else:
-			to_return._internal_elf_valid = false
-			to_return._header = ElfHeader.new()
-		to_return._header_cached = to_return._internal_elf_valid
-		to_return.program_headers = ElfProgramHeader.load_program_headers(to_return._header, data)
-		
-		return to_return
-*/
-
 }
 
+//All of the enum casting
 VARIANT_ENUM_CAST(ElfHeader::Offsets);
 VARIANT_ENUM_CAST(ElfHeader::Endianness);
 VARIANT_ENUM_CAST(ElfHeader::BitSize);

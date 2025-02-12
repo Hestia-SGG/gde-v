@@ -4,23 +4,33 @@
 #include "gde-v/hart.h"
 #include "gde-v/utils.h"
 
+// File from the newlib libgloss repository, riscv folder.
 #include <machine/syscall.h>
 
 namespace godot{
 
+/**
+ * Extension class for the RVHart. This breaks out the EUECALL, ESECALL, and EMECALL
+ * into separate signals for what the syscall is trying to achieve. Conforms to the newlib
+ * RISV-V syscall implementation. 
+ */
 class ABIHart : public RVHart{
     GDCLASS(ABIHart, RVHart)
 
 protected:
+    // Standard Godot binding method to let it know about our class.
     static void _bind_methods();
 
+    // Override the parent exception handler
     virtual bool _handle_exception(RVExceptions exception) override;
 
+    // Emit a syscall of the given number. Uses newlib RISC-V numbers.
     bool emit_syscall_signal(int64_t syscall_number);
 public:
     ABIHart(){}
     ~ABIHart(){}
 
+    // Mappings for all the syscall numbers so it's easier to use.
     enum SyscallMappings{
         SYS_ENUM_WRAP(getcwd),
         SYS_ENUM_WRAP(dup),

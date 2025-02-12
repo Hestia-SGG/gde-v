@@ -1,9 +1,6 @@
 #include "register_types.h"
 
 #include "gde-v.h"
-#include "gde-v/hart.h"
-#include "gde-v/elf.h"
-#include "gde-v/abi_hart.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -11,6 +8,7 @@
 
 using namespace godot;
 
+// Standard initialization function for Godot.
 void initialize_gdev_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
@@ -27,6 +25,7 @@ void initialize_gdev_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(ElfFile);
 }
 
+// Standard uninitialization function for Godot.
 void uninitialize_gdev_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;

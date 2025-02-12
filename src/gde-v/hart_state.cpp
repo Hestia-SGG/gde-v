@@ -1,10 +1,16 @@
-#include "gde-v.h"
+#include "gde-v/hart_state.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
+// Macro redefined here from rv.c since it isn't globally available.
 #define rv_ext(c) (1 << (rv_u8)((c) - 'A')) /* isa extension bit in misa */
+
+/**
+ * Does initial setup of a HART device, trying to set it to a known good state.
+ * Starts in Machine mode, but setting priv to another value will move it.
+ */
 void blank_rv(rv* hart_device){
 	hart_device->pc = 0x80000000;
 
@@ -49,6 +55,9 @@ void blank_rv(rv* hart_device){
 
 //------------- Static ------------------------------------------------------------------------
 
+/**
+ * Binds this class into Godot. See RVBusDevice::_bind_methods for more info.
+ */
 void RVHartState::_bind_methods(){
 	BIND_GET_SET(exited, RVHartState, BOOL, "new_val")
 	BIND_GET_SET(pending_exception, RVHartState, INT, "new_val")
@@ -104,6 +113,10 @@ void RVHartState::clear_pending_exception(){
 	this->pending_exception = RVExceptions::ETRAP_NONE;
 }
 
+/**
+ * Default constructor. Resets the HART to a hopefully known good state, and set the defaults
+ * for pending and exited.
+ */
 RVHartState::RVHartState(){
 	blank_rv(&(this->hart_device));
 	this->pending_exception = RVExceptions::ETRAP_NONE;
@@ -115,6 +128,12 @@ RVHartState::~RVHartState(){
 
 }
 
+/**
+ * Returns the register set, but a duplicate, not the original. This is
+ * so that a caller can't manipulate them without calling set_registers.
+ * Does cause some wonkiness in Godot with the editor, but doesn't seem
+ * to affect in-code or in-game.
+ */
 PackedInt32Array RVHartState::get_registers(){
 	PackedInt32Array ret;
 	ret.resize(32);
@@ -124,17 +143,28 @@ PackedInt32Array RVHartState::get_registers(){
 	return ret;
 }
 
+/**
+ * Copy the values over instead of copying the input or setting directly
+ * equal to it. Safety measure to make sure that it can't be manipulated
+ * outside of this function.
+ */
 void RVHartState::set_registers(const PackedInt32Array& values){
 	for(int64_t i = 0; i < 32 && i < values.size(); i++){
 		this->hart_device.r[i] = values[i];
 	}
 }
 
+/**
+ * Gets a register by number. Hard coded to RV32 though.
+ */
 int64_t RVHartState::get_register_by_num(int64_t reg_number){
 	if(reg_number < 0 || reg_number > 32) return 0;
 	else return this->hart_device.r[reg_number];
 }
 
+/**
+ * Gets a register by name using the ABI. Hard coded to RV32 though.
+ */
 int64_t RVHartState::get_register_by_name(String reg_name){
 	std::map<String, int64_t>::const_iterator iter = this->register_mappings.find(reg_name);
 	if(iter == this->register_mappings.end()) return -1;
@@ -142,10 +172,16 @@ int64_t RVHartState::get_register_by_name(String reg_name){
 	return this->get_register_by_num(iter->second);
 }
 
+/**
+ * Sets a register by number. Hard coded to RV32 though.
+ */
 void RVHartState::set_register_by_num(int64_t reg_num, int64_t value){
 	if(reg_num >= 0 && reg_num < 32) this->hart_device.r[reg_num] = value;
 }
 
+/**
+ * Sets a register by name using the ABI. Hard coded to RV32 though.
+ */
 void RVHartState::set_register_by_name(String reg_name, int64_t value){
 	std::map<String, int64_t>::const_iterator iter = this->register_mappings.find(reg_name);
 	if(iter == this->register_mappings.end()) return;
@@ -155,34 +191,51 @@ void RVHartState::set_register_by_name(String reg_name, int64_t value){
 
 void RVHartState::copy_from_info(rv* hart_info){
 	if(hart_info == nullptr) return;
-	this->hart_device.pc = hart_info->pc;
+	/*this->hart_device.pc = hart_info->pc;
 	this->hart_device.priv = hart_info->priv;
 	for(int64_t i = 0; i < 32; i++){
 		this->hart_device.r[i] = hart_info->r[i];
-	}
+	}*/
+
+	// EXPERIMENTAL: use memcpy on the devices
+	memcpy(&(this->hart_device), hart_info, sizeof(rv));
 }
 
 void RVHartState::copy_into_info(rv* hart_info){
 	if(hart_info == nullptr) return;
-	hart_info->pc = this->hart_device.pc;
+	/*hart_info->pc = this->hart_device.pc;
 	hart_info->priv = this->hart_device.priv;
 	for(int64_t i = 0; i < 32; i++){
 		hart_info->r[i] = this->hart_device.r[i];
-	}
+	}*/
+
+	// EXPERIMENTAL: use memcpy on the devices
+	memcpy(hart_info, &(this->hart_device), sizeof(rv));
 }
 
 rv* RVHartState::get_hart_info(){
 	return &(this->hart_device);
 }
 
+/**
+ * Check if the given interrupt bit is set for Machine mode.
+ */
 bool RVHartState::is_software_interrupt(){
 	return (this->hart_device.csr.mip & RV_CSI) != 0;
 }
 
+/**
+ * Check if the given interrupt bit is set for Machine mode.
+ */
 bool RVHartState::is_timer_interrupt(){
 	return (this->hart_device.csr.mip & RV_CTI) != 0;
 }
 
+/**
+ * Check if the given interrupt bit is set for Machine mode.
+ * NOTE: RV_CEI in the official repository is set to 512, which is
+ * the bitmask for Supervisor mode External Interrupt, not Machine mode.
+ */
 bool RVHartState::is_external_interrupt(){
 	return (this->hart_device.csr.mip & RV_CEI) != 0;
 }

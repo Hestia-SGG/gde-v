@@ -19,3 +19,4 @@ mono_crash.*.json
 *.dll
 *.exp
 *.obj
+*.dblite

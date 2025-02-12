@@ -1,6 +1,6 @@
 class_name ElfDecode extends Node2D
 
-var elf_file = "C:/Users/gwent/Documents/gde-v/test/project/assets/roms/testing"
+var elf_file = "res://assets/roms/testing"
 
 func int32_to_uint32(value: int):
 	var temp: PackedByteArray
@@ -87,28 +87,22 @@ func _ready():
 	
 	var stack_start_addr = 0x04000000
 	var stack_end_local_addr = (16*1024)
-	var stack_end_addr = stack_start_addr + stack_end_local_addr
+	var _stack_end_addr = stack_start_addr + stack_end_local_addr
 	var heap_start_addr = 0x03000000
 	
 	var heap_min_size = 128*1024
 	var stack_min_size = 16*1024
 	
 	var stack_device_addr = hart.create_stack_device(stack_min_size, stack_start_addr)
-	var stack_device : RVMemoryDevice = hart.get_bus_device(stack_device_addr)
-	#var _test_write_ret = stack_device.write(0, stack_data)
-	#var _test_read_back = stack_device.read(stack_end_local_addr-8, 8)
+	var _stack_device : RVMemoryDevice = hart.get_bus_device(stack_device_addr)
 	
 	var heap_device_addr = hart.create_heap_device(heap_min_size, heap_start_addr)
-	var heap_device : RVHeapDevice = hart.get_bus_device(heap_device_addr)
-	#heap_device.underlying_mem_size = cur_place;
-	#_test_write_ret = heap_device.write(0, param_data.slice(0, cur_place))
-	#_test_read_back = heap_device.read(0, heap_device.underlying_mem_size)
-	#var _test_size = heap_device.get_size()
+	var _heap_device : RVHeapDevice = hart.get_bus_device(heap_device_addr)
 	
 	hart.reset_hart(elf_file_in.header.entry_point)
 	hart.hart_state.priv = 0
 	
-	var param_addr = hart.encode_parameters(["testing", "abc"])
+	var _param_addr = hart.encode_parameters(["testing", "abc"])
 	
 	hart.machine_system_call.connect(test_sys_call)
 	hart.user_system_call.connect(test_user_sys_call)
@@ -117,10 +111,7 @@ func _ready():
 	hart.except_load_fault.connect(illegal_instruction_handler)
 	hart.pending_brk.connect(test_brk_call)
 	
-	var debug = hart.bus_read(elf_file_in.header.entry_point, 12)
-	debug = hart.bus_read(80992, 12)
-	debug = hart.bus_read(81799, 1)
-	debug = hart.bus_read(65772, 4)
+	var _debug = hart.bus_read(elf_file_in.header.entry_point, 12)
 	pass
 
 func perform_hart_step():
@@ -134,7 +125,7 @@ func perform_hart_step():
 	print(to_print)
 	return true
 
-func _process(delta):
+func _process(_delta):
 	for i in range(10):
 		if not perform_hart_step(): return
 	pass

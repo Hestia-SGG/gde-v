@@ -4,6 +4,9 @@
 
 using namespace godot;
 
+//------------- Static ------------------------------------------------------------------------
+
+// Macro function to make binding the methods easier.
 #define BIND_SYSCALL_STATIC(x) ADD_SIGNAL(MethodInfo("pending_" #x, PropertyInfo(Variant::OBJECT, "hart", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT, "ABIHart"))); BIND_ENUM_CONSTANT(x)
 
 void ABIHart::_bind_methods(){
@@ -51,15 +54,20 @@ void ABIHart::_bind_methods(){
     BIND_SYSCALL_STATIC(getmainvars)
 }
 
+//------------- Member ------------------------------------------------------------------------
+
+/**
+ * Reimplementation of parent function. Will attempt to get the value of the a7 register, then 
+ * emit a signal for it. Will return the parent's implementation if the signal wasn't emitted or
+ * the syscall wasn't handled.
+ */
 bool ABIHart::_handle_exception(RVExceptions exception){
     if(exception != RVExceptions::ETRAP_NONE){
 		switch(exception){
 			case EUECALL:
 			case ESECALL:
 			case EMECALL:
-				//this->emit_signal("machine_system_call", this);
-                //Register 17 is the one that maps to a7
-                this->emit_syscall_signal(this->hart_state->get_register_by_num(17));
+                this->emit_syscall_signal(this->hart_state->get_register_by_name("a7"));
 				break;
 			default:
 				break;
@@ -73,8 +81,12 @@ bool ABIHart::_handle_exception(RVExceptions exception){
     return true;
 }
 
+// Helper macro
 #define CASE_SYSCALL_TO_STR(x, y) case SyscallMappings::x : y = "pending_" #x; break;
 
+/**
+ * Emits a signal for the given syscall.
+ */
 bool ABIHart::emit_syscall_signal(int64_t syscall_number){
     String signal_to_call = "";
     switch(syscall_number){
