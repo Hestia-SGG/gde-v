@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/extern/rv",
+                "${workspaceFolder}/extern/rv/tools/linux",
+                "${workspaceFolder}/extern/godot-cpp/include",
+                "${workspaceFolder}/extern/godot-cpp/gen/include",
+                "${workspaceFolder}/extern/newlib/libgloss/riscv",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

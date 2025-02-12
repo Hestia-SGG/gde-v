@@ -1,0 +1,55 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "SCons BuildVSDebug",
+            "command": "scons",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "args": [
+                "platform=${input:platform}",
+                "target=${input:debugrelease}"
+            ]
+        },
+        {
+            "label": "Godot 4.3",
+            "windows": {
+                "command": "${config:godot_path.win}"
+            },
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/test/project/"
+            },
+            "args": [
+                "-e"
+            ],
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "platform",
+            "description": "Which platform to compile for?",
+            "options": [
+                "windows",
+                "linux",
+                "web"
+            ],
+            "default": "windows"
+        },
+        {
+            "type": "pickString",
+            "id": "debugrelease",
+            "description": "Debug or release?",
+            "options": [
+                "template_debug",
+                "template_release"
+            ],
+            "default": "template_debug"
+        }
+    ]
+}
