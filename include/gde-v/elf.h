@@ -213,7 +213,7 @@ public:
 
     // Loads all the arrays in the data slice. Use the header to know the offset to start and bit size. MUST NOT BE SLICE,
     // must be whole file.
-    static TypedArray<ElfProgramHeader> ElfProgramHeader::load_program_headers(Ref<ElfHeader> header, PackedByteArray data);
+    static TypedArray<ElfProgramHeader> load_program_headers(Ref<ElfHeader> header, PackedByteArray data);
 };
 
 /**
