@@ -39,6 +39,47 @@ web.release.threads.wasm32 = "./bin/libgdgde-v.web.template_release.wasm32.wasm"
 web.debug.wasm32 = "./bin/libgdgde-v.web.template_debug.wasm32.nothreads.wasm"
 web.release.wasm32 = "./bin/libgdgde-v.web.template_release.wasm32.nothreads.wasm"
 
+windows.debug.double.x86_32 = "./bin/libgde-v.windows.template_debug.double.x86_32.dll"
+windows.release.double.x86_32 = "./bin/libgdgde-v.windows.template_release.double.x86_32.dll"
+windows.debug.double.x86_64 = "./bin/libgde-v.windows.template_debug.double.x86_64.dll"
+windows.release.double.x86_64 = "./bin/libgdgde-v.windows.template_release.double.x86_64.dll"
+windows.debug.double.arm64 = "./bin/libgde-v.windows.template_debug.double.arm.dll"
+windows.release.double.arm64 = "./bin/libgdgde-v.windows.template_release.double.arm64.dll"
+
+macos.debug = "./bin/libgdgde-v.macos.template_debug.double.framework"
+macos.release = "./bin/libgdgde-v.macos.template_release.double.framework"
+
+windows.debug.double.x86_32 = "./bin/libgde-v.windows.template_debug.double.x86_32.dll"
+windows.release.double.x86_32 = "./bin/libgdgde-v.windows.template_release.double.x86_32.dll"
+windows.debug.double.x86_64 = "./bin/libgde-v.windows.template_debug.double.x86_64.dll"
+windows.release.double.x86_64 = "./bin/libgdgde-v.windows.template_release.double.x86_64.dll"
+windows.debug.double.arm64 = "./bin/libgde-v.windows.template_debug.double.arm.dll"
+windows.release.double.arm64 = "./bin/libgdgde-v.windows.template_release.double.arm64.dll"
+
+linux.debug.double.x86_32 = "./bin/libgdgde-v.linux.template_debug.double.x86_32.so"
+linux.release.double.x86_32 = "./bin/libgdgde-v.linux.template_release.double.x86_32.so"
+linux.debug.double.x86_64 = "./bin/libgdgde-v.linux.template_debug.double.x86_64.so"
+linux.release.double.x86_64 = "./bin/libgdgde-v.linux.template_release.double.x86_64.so"
+linux.debug.double.arm32 = "./bin/libgdgde-v.linux.template_debug.double.arm32.so"
+linux.release.double.arm32 = "./bin/libgdgde-v.linux.template_release.double.arm32.so"
+linux.debug.double.arm64 = "./bin/libgdgde-v.linux.template_debug.double.arm64.so"
+linux.release.double.arm64 = "./bin/libgdgde-v.linux.template_release.double.arm64.so"
+linux.debug.double.rv64 = "./bin/libgdgde-v.linux.template_debug.double.rv64.so"
+linux.release.double.rv64 = "./bin/libgdgde-v.linux.template_release.double.rv64.so"
+
+android.debug.double.x86_64 = "./bin/libgdgde-v.android.template_debug.double.x86_64.so"
+android.release.double.x86_64 = "./bin/libgdgde-v.android.template_release.double.x86_64.so"
+android.debug.double.arm64 = "./bin/libgdgde-v.android.template_debug.double.arm64.so"
+android.release.double.arm64 = "./bin/libgdgde-v.android.template_release.double.arm64.so"
+
+ios.debug = "./bin/libgdgde-v.ios.template_debug.double.xcframework"
+ios.release = "./bin/libgdgde-v.ios.template_release.double.xcframework"
+
+web.debug.double.threads.wasm32 = "./bin/libgdgde-v.web.template_debug.double.wasm32.wasm"
+web.release.double.threads.wasm32 = "./bin/libgdgde-v.web.template_release.double.wasm32.wasm"
+web.debug.double.wasm32 = "./bin/libgdgde-v.web.template_debug.double.wasm32.nothreads.wasm"
+web.release.double.wasm32 = "./bin/libgdgde-v.web.template_release.double.wasm32.nothreads.wasm"
+
 [dependencies]
 ios.debug = {
   "res://bin/libgodot-cpp.ios.template_debug.xcframework": ""
