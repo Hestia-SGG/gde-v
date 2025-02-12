@@ -323,7 +323,7 @@ jobs:
           name: gde_v-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
           path: |
             ${{ github.workspace }}/bin/
-			${{ github.workspace }}/gde-v.gdextension
+            ${{ github.workspace }}/gde-v.gdextension${{ github.workspace }}/gde-v.gdextension
 
   # Merges all the build artifacts together into a single gde_v artifact.
   # If you comment out this step, all the builds will be uploaded individually.
