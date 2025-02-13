@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RVMemoryDevice" inherits="RVBusDevice" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		RISC-V Generic Memory Device
+	</brief_description>
+	<description>
+		A generic memory device that uses a [PackedByteArray] to store it's contents. Can also be changed to a ROM by setting the read-only flag.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_from_buffer" qualifiers="static">
+			<return type="RVMemoryDevice" />
+			<param index="0" name="buffer" type="PackedByteArray" />
+			<param index="1" name="min_size" type="int" default="0" />
+			<description>
+				Creates a copy of the input [PackedByteArray], and will optionally make sure it is a minimum size. Will be returned read-only.
+			</description>
+		</method>
+		<method name="load_rom_file" qualifiers="static">
+			<return type="RVMemoryDevice" />
+			<param index="0" name="file_path" type="String" />
+			<description>
+				Loads a binary file at the given path into a memory device and returns it. Will be returned read-only.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="read_only" type="bool" setter="set_read_only" getter="get_read_only" default="false">
+			Allows setting this as read-only, meaning write and set size operations will fail.
+		</member>
+	</members>
+</class>

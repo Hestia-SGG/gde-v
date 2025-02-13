@@ -9,7 +9,7 @@ void ElfFile::_bind_methods(){
         String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) + ":ElfProgramHeader")*/
     BIND_GET_NOSET(loaded, ElfFile, Variant::BOOL)
 
-    ClassDB::bind_method(D_METHOD("load_data"), &ElfFile::load_data);
+    ClassDB::bind_method(D_METHOD("load_data", "data"), &ElfFile::load_data);
     ClassDB::bind_method(D_METHOD("generate_memory_areas"), &ElfFile::generate_memory_areas);
 
     ClassDB::bind_static_method("ElfFile", D_METHOD("load_elf_data", "data"), &ElfFile::load_elf_data);
@@ -18,7 +18,7 @@ void ElfFile::_bind_methods(){
 Ref<ElfFile> ElfFile::load_elf_data(Variant data){
     Ref<ElfFile> ret;
     //We are double checking here and in the sub function, but better safe
-    if(data.get_type() != Variant::PACKED_BYTE_ARRAY) return ret;
+    if(data.get_type() != Variant::PACKED_BYTE_ARRAY) return nullptr;
 
     ret.instantiate();
     ret->load_data(data);

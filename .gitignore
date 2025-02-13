@@ -20,3 +20,4 @@ mono_crash.*.json
 *.exp
 *.obj
 *.dblite
+/src/gen

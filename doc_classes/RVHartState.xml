@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RVHartState" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		State information for a RISC-V HARdware Thread.
+	</brief_description>
+	<description>
+		Used by [RVHart] to store the necessary information for running a RISC-V HART.
+		[b]NOTE:[/b] Registers x0 through x31 are stored in a PackedInt32Array. That means the calls to [method get_register_by_name] and [method get_register_by_number] return a signed 32bit number, and [method set_register_by_num] and [method set_register_by_name] take a signed 32bit number. If this causes issues, may change in the future.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear_pending_exception">
+			<return type="void" />
+			<description>
+				Clears the exception pending by setting it equal to [constant RVExceptions.ETRAP_NONE].
+			</description>
+		</method>
+		<method name="get_register_by_name">
+			<return type="int" />
+			<param index="0" name="reg_name" type="String" />
+			<description>
+				Gets a register by the passed in [param reg_name], which must be a RISC-V ABI defined name such as "zero", "a7", or "sp".
+				If the register name is valid, returns it's value. Otherwise returns -1.
+			</description>
+		</method>
+		<method name="get_register_by_num">
+			<return type="int" />
+			<param index="0" name="reg_number" type="int" />
+			<description>
+				Gets a register by the passed in [param reg_number]. If the register name is valid, returns it's value. Otherwise returns -1.
+			</description>
+		</method>
+		<method name="is_external_interrupt">
+			<return type="bool" />
+			<description>
+				Returns if the [member mip] register has the external machine flag set. [b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="is_software_interrupt">
+			<return type="bool" />
+			<description>
+				Returns if the [member mip] register has the software machine flag set. [b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="is_timer_interrupt">
+			<return type="bool" />
+			<description>
+				Returns if the [member mip] register has the timer machine flag set. [b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="set_register_by_name">
+			<return type="void" />
+			<param index="0" name="reg_name" type="String" />
+			<param index="1" name="value" type="int" />
+			<description>
+				Sets a register by the passed in [param reg_name] to [param value], which must be a RISC-V ABI defined name such as "zero", "a7", or "sp".
+				If the register name is invalid, do nothing.
+			</description>
+		</method>
+		<method name="set_register_by_num">
+			<return type="void" />
+			<param index="0" name="reg_number" type="int" />
+			<param index="1" name="value" type="int" />
+			<description>
+				Sets a register by the passed in [param reg_number] to [param value]. If the register name is invalid, do nothing.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="exited" type="bool" setter="set_exited" getter="get_exited" default="false">
+			Whether or not this HART is marked as exited. Can be used to stop processing.
+		</member>
+		<member name="marchid" type="int" setter="set_marchid" getter="get_marchid" default="0">
+			Machine Architecture ID. Currently set to 0.
+		</member>
+		<member name="mcause" type="int" setter="set_mcause" getter="get_mcause" default="0">
+			Machine exception cause. The reason the exception went to machine mode, usually the Exception number or Interrupt flag.
+		</member>
+		<member name="mcounteren" type="int" setter="set_mcounteren" getter="get_mcounteren" default="0">
+			Currently unused.
+		</member>
+		<member name="medeleg" type="int" setter="set_medeleg" getter="get_medeleg" default="0">
+			Currently unused. Enables exception delegation to a lower priviledge instead of machine mode.
+		</member>
+		<member name="mepc" type="int" setter="set_mepc" getter="get_mepc" default="0">
+			The PC of the instruction that caused an exception to machine mode. When calling mret, pc is set to this value.
+			When ecall or ebreak is used, it does [b]not[/b] point to the next instruction, but the ecall/ebreak itself.
+		</member>
+		<member name="mhartid" type="int" setter="set_mhartid" getter="get_mhartid" default="0">
+			Sets the HART ID for this HART.
+		</member>
+		<member name="mideleg" type="int" setter="set_mideleg" getter="get_mideleg" default="0">
+			Currently unused. Enables interrupt delegation to a lower priviledge instead of machine mode.
+		</member>
+		<member name="mie" type="int" setter="set_mie" getter="get_mie" default="0">
+			Enables/disables machine interrupt handling for a given interrupt. See RISC-V Priviledge Specs for possible values.
+		</member>
+		<member name="mimpid" type="int" setter="set_mimpid" getter="get_mimpid" default="0">
+			Sets the Implementation ID for this HART. Implementation specific, unused by the library.
+		</member>
+		<member name="mip" type="int" setter="set_mip" getter="get_mip" default="0">
+			Indicates if a specific machine interrupt is pending. See RISC-V Priviledge Specs for possible values. Wrapped in the methods [method is_external_interrupt], [method is_software_interrupt], and [method is_timer_interrupt].
+		</member>
+		<member name="misa" type="int" setter="set_misa" getter="get_misa" default="1075056645">
+			Indicates the ISA supported. Because the only allowed library is the rv library, it is set to RV32imac_zicsr with supervisor/user modes (0x40141005).
+		</member>
+		<member name="mscratch" type="int" setter="set_mscratch" getter="get_mscratch" default="0">
+			Scratch register for machine exception handlers.
+		</member>
+		<member name="mstatus" type="int" setter="set_mstatus" getter="get_mstatus" default="0">
+			The status register that indicates the state of the machine. See the RISC-V Priviledge ISA for the possible values.
+		</member>
+		<member name="mstatush" type="int" setter="set_mstatush" getter="get_mstatush" default="0">
+			The high part of the status register, as this is an RV32 implementation.
+		</member>
+		<member name="mtime" type="int" setter="set_mtime" getter="get_mtime" default="0">
+			[b]Currently not auto incremented. TODO to add[/b]
+			Timer register. The default implementations don't increment this, so timing functionality won't work unless implemented.
+		</member>
+		<member name="mtimeh" type="int" setter="set_mtimeh" getter="get_mtimeh" default="0">
+			High bits of the timer register.
+		</member>
+		<member name="mtval" type="int" setter="set_mtval" getter="get_mtval" default="0">
+			Machine Trap Value. Set to a value on exception, and is usually the address of the instructiont that faulted.
+		</member>
+		<member name="mtvec" type="int" setter="set_mtvec" getter="get_mtvec" default="0">
+			Machine Trap Vector. [b]NOT USED![/b] Traps are handled through signals, so this is ignored.
+			[b]TODO:[/b] In the future, allow if this has a value to handle jumping to it correctly instead of emitting signals.
+		</member>
+		<member name="mvendorid" type="int" setter="set_mvendorid" getter="get_mvendorid" default="0">
+			Machine Vendor ID, currently set to 0.
+		</member>
+		<member name="pc" type="int" setter="set_pc" getter="get_pc" default="2147483648">
+			Program Counter, the current instruction being executed. Set this to peform arbitrary jumps without using a jump instruction.
+		</member>
+		<member name="pending_exception" type="int" setter="set_pending_exception" getter="get_pending_exception" enum="RVExceptions" default="-2147483632">
+			Returns the last exception unhandled, or [constant RVHart.ETRAP_NONE] if there is none.
+		</member>
+		<member name="pending_interrupt" type="bool" setter="set_pending_interrupt" getter="get_pending_interrupt" default="false">
+			Returns if there is a pending interrupt. Does not check the mip register.
+		</member>
+		<member name="priv" type="int" setter="set_priv" getter="get_priv" default="3">
+			Represents the Priviledge level being run at. 0 = user, 1 = supervisor, and 3 = machine. Machine is default, but at any time can change to a lower priviledge. Going up should be done through mret/sret.
+		</member>
+		<member name="registers" type="PackedInt32Array" setter="set_registers" getter="get_registers" default="PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)">
+			The current register state. Updates in realtime.
+		</member>
+		<member name="satp" type="int" setter="set_satp" getter="get_satp" default="0">
+			Supervisor Address Translation and Protection.
+		</member>
+		<member name="scause" type="int" setter="set_scause" getter="get_scause" default="0">
+			Supervisor exception cause. The reason the exception went to machine mode, usually the Exception number or Interrupt flag.
+		</member>
+		<member name="scounteren" type="int" setter="set_scounteren" getter="get_scounteren" default="0">
+			Currently unused.
+		</member>
+		<member name="sepc" type="int" setter="set_sepc" getter="get_sepc" default="0">
+			The PC of the instruction that caused an exception to supervisor mode. When calling sret, pc is set to this value.
+			When ecall or ebreak is used, it does [b]not[/b] point to the next instruction, but the ecall/ebreak itself.
+		</member>
+		<member name="sie" type="int" setter="set_sie" getter="get_sie" default="0">
+			Enables/disables supervisor interrupt handling for a given interrupt. See RISC-V Priviledge Specs for possible values.
+		</member>
+		<member name="sip" type="int" setter="set_sip" getter="get_sip" default="0">
+			Indicates if a specific machine interrupt is pending. See RISC-V Priviledge Specs for possible values.
+		</member>
+		<member name="sscratch" type="int" setter="set_sscratch" getter="get_sscratch" default="0">
+			Scratch register for supervisor exception handlers.
+		</member>
+		<member name="stval" type="int" setter="set_stval" getter="get_stval" default="0">
+			Supervisor Trap Value. Set to a value on exception, and is usually the address of the instructiont that faulted.
+		</member>
+		<member name="stvec" type="int" setter="set_stvec" getter="get_stvec" default="0">
+			Supervisor Trap Vector. [b]NOT USED![/b] Traps are handled through signals, so this is ignored.
+			[b]TODO:[/b] In the future, allow if this has a value to handle jumping to it correctly instead of emitting signals.
+		</member>
+	</members>
+</class>

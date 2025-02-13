@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RVHart" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		RISC-V HART
+	</brief_description>
+	<description>
+		A single RISC-V HART, or HARdware Thread. Handles it's own state through an [RVHartState] Resource. The underlying [url=https://github.com/mnurzia/rv]rv[/url] library supports the RV32imac_ziscr ISAs.
+		[b]NOTE:[/b] While the rv library supports Supervisor mode, it is untested. If issues are found please report them, but they may be low priority.
+		[b]NOTE:[/b] Right now, there is a defect where if an RVHartState is created on an RVHart in the Editor, it won't be updated in the Inspector when run through the Editor. To get around this, you can create a local variable:
+		[codeblocks][gdscript]
+		var curent_hart = $HartInTree
+		var _debug_hart_state = curent_hart.hart_state
+		[/gdscript][/codeblocks]
+		After creating an RVHart, you can add [RVBusDevice]s through [method add_bus_device]. There is preliminary support for RISC-V ELF loading through [ElfFile], which can generate the regions defined in the Program Headers through [RVMemoryDevice]s. 
+		Once the devices are loaded, create a Stack and Heap through create_stack_device and create_heap_device. These will auto load the created devices onto the bus, and return the addresses they were loaded at. After the Stack is added, C style parameters can be added through encode_parameters.
+		Traps are propagated through Signals, with separate ones defined for Exceptions and Interrupts. Exceptions are hardware faults (or requests when its one of the ECALLs) while Interrupts are requests to process. Each is exposed as individual Signals so checking of the exception/interrupt type isn't required.
+		In order to continue after a Trap, the Callable that handles an Exception must call clear_pending_exception on the HART State, and the Callable that handles an Interrupt must set pending_interrupt on the HART State to false. Both must also call mret.
+		[codeblocks][gdscript]
+		func exception_handler(hart_to_service: RVHart):
+			# Handle exception here
+
+			# Clear pending exception
+			hart_to_service.hart_state.clear_pending_exception()
+			# Call mret to return from machine mode. First parameter clears
+			# mcause and mtval registers,and second parameter increments mepc
+			# before calling mret.
+			hart_to_service.mret(true, true)
+		[/gdscript][/codeblocks]
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_handle_exception" qualifiers="virtual">
+			<return type="bool" />
+			<param index="0" name="exception" type="int" enum="RVExceptions" />
+			<description>
+				Virtual function to be overridden in subclasses. Can change how exceptions are emitted by the RVHart class, for example [ABIHart] uses it to emit signals for each syscall defined upon receiving an ECALL.
+			</description>
+		</method>
+		<method name="add_bus_device">
+			<return type="int" enum="Error" />
+			<param index="0" name="new_device" type="RVBusDevice" />
+			<param index="1" name="offset" type="int" />
+			<description>
+				Adds a bus device at the given offset. If there is already a device preset at that address, it returns an [enum Error] value, otherwise [constant OK].
+			</description>
+		</method>
+		<method name="bus_read">
+			<return type="Variant" />
+			<param index="0" name="address" type="int" />
+			<param index="1" name="size" type="int" />
+			<description>
+				Performs a read from the bus. Address is relative to the global HART address space; when the underlying bus is called, it's translated to relative to the bus' address, so the bus will see it starting from it's 0, not global 0.
+			</description>
+		</method>
+		<method name="bus_write">
+			<return type="int" enum="RVMemResult" />
+			<param index="0" name="address" type="int" />
+			<param index="1" name="data" type="PackedByteArray" />
+			<description>
+				Performs a write to the bus. Address is relative to the global HART address space; when the underlying bus is called, it's translated to relative to the bus' address, so the bus will see it starting from it's 0, not global 0.
+			</description>
+		</method>
+		<method name="clear_external_interrupt">
+			<return type="void" />
+			<description>
+				Clears the external interrupt bit from the mip CSR register. [b]Does not[/b] clear the pending_interrupt flag on the hart_state.
+				[b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="clear_software_interrupt">
+			<return type="void" />
+			<description>
+				Clears the software interrupt bit from the mip CSR register. [b]Does not[/b] clear the pending_interrupt flag on the hart_state.
+				[b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="clear_timer_interrupt">
+			<return type="void" />
+			<description>
+				Clears the timer interrupt bit from the mip CSR register. [b]Does not[/b] clear the pending_interrupt flag on the hart_state.
+				[b]Supervisor[/b] flag not currently supported.
+			</description>
+		</method>
+		<method name="create_heap_device">
+			<return type="int" />
+			<param index="0" name="size" type="int" />
+			<param index="1" name="start_hint" type="int" default="3758096384" />
+			<description>
+				Creates a Heap device, trying to fit it at [param start_hint]. If unable to do so, it will try to find the next block big enough to. Returns either the address of the found memory region, or -1 on error.
+			</description>
+		</method>
+		<method name="create_stack_device">
+			<return type="int" />
+			<param index="0" name="size" type="int" />
+			<param index="1" name="start_hint" type="int" default="4294901760" />
+			<description>
+				Creates a Stack device, trying to fit it at [param start_hint]. If unable to do so, it will try to find the next block big enough to. Returns either the address of the found memory region, or -1 on error.
+			</description>
+		</method>
+		<method name="encode_parameters">
+			<return type="int" />
+			<param index="0" name="data" type="Variant" />
+			<description>
+				Encode the provided parameter(s) as a C style char**. [param data] may be any type; if a single item is passed in, it will be converted using [method @GlobalScope.str]. Arrays will be iterated over and each element will be turned into a string using [method @GlobalScope.str].
+				[b]Requires[/b] that the stack be set up either manually or through [method create_stack_device].
+				The resulting strings are encoded into a read-only [RVMemoryDevice], and the address it is inserted at is returned. The stack is updated with the following: sp -> argc (int32), sp+4 -> argv (char**), sp+8 -> null (used for environ). argv is encoded into the same memory region at the end. Each char* points to the address [b]in global space[/b] to the individual string.
+				A null pointer is added to the end of argv for safety.
+				[b]NOTE:[/b] may be updated to instead return the pointer to the char** address. This would allow getting the address to the memory region by getting the first pointer at this address, since the first pointer points to the first parameter which is at the beginning of the memory address.
+			</description>
+		</method>
+		<method name="get_bus_device">
+			<return type="RVBusDevice" />
+			<param index="0" name="offset" type="int" />
+			<description>
+				Gets the bus device located at [param offset], returning either it or [code]null[/code] if not found.
+			</description>
+		</method>
+		<method name="mret">
+			<return type="void" />
+			<param index="0" name="clear_vals" type="bool" />
+			<param index="1" name="increment_mepc" type="bool" />
+			<description>
+				Calls the mret instruction located at [member mret_address].
+				If [param clear_vals] is [code]true[/code], then the CSRs mcause and mtval are set to 0.
+				If [param increment_mepc] is [code]true[/code], then the CSR mepc is incremented before calling the mret instruction.
+				[b]NOTE:[/b] may change in the future to no longer requrie mret_address.
+			</description>
+		</method>
+		<method name="remove_bus_device">
+			<return type="int" enum="Error" />
+			<param index="0" name="to_remove" type="RVBusDevice" />
+			<description>
+				Removes the bus device using the passed in reference. Returns [enum Error] on failure or [constant OK] on success.
+			</description>
+		</method>
+		<method name="remove_bus_device_by_offset">
+			<return type="int" enum="Error" />
+			<param index="0" name="offset" type="int" />
+			<description>
+				Removes the bus device found at [param offset]. Returns [enum Error] on failure or [constant OK] on success.
+			</description>
+		</method>
+		<method name="reset_hart">
+			<return type="void" />
+			<param index="0" name="pc_start" type="int" default="2147483648" />
+			<description>
+				Resets the HART state to a baseline/initial state. Equivalent to turning it off then back on. Should be used to initialize the HART before calling [method step_hart]. If [member stack_address] has a value, it will set the sp register with this value.
+				Pass in a value for [param pc_start] to have code start executing at this address instead.
+			</description>
+		</method>
+		<method name="step_hart">
+			<return type="int" enum="RVExceptions" />
+			<description>
+				Performs a single step of the HART. Equivalent to 1 RISC-V CPU cycle. Starts by checking if there are any pending interrupts or exceptions, and emits the corresponding signal(s) if so. After, if it is determined they are still pending, the HART will not perform a step and instead return [constant EIFAULT].
+				Otherwise, performs the HART step. If an exception or interrupt occurs, it will set the corresponding pending flag. On exception, it returns which exception occurred. On OK, it will return [constant ETRAP_NONE].
+			</description>
+		</method>
+		<method name="trigger_external_interrupt">
+			<return type="void" />
+			<description>
+				Sets that there is an external interrupt to service. Updates the mip flag, but does not set the pending interrupt flag, as that will be handled during the next [method step_hart] call.
+			</description>
+		</method>
+		<method name="trigger_software_interrupt">
+			<return type="void" />
+			<description>
+				Sets that there is an software interrupt to service. Updates the mip flag, but does not set the pending interrupt flag, as that will be handled during the next [method step_hart] call.
+			</description>
+		</method>
+		<method name="trigger_timer_interrupt">
+			<return type="void" />
+			<description>
+				Sets that there is an timer interrupt to service. Updates the mip flag, but does not set the pending interrupt flag, as that will be handled during the next [method step_hart] call.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="hart_state" type="RVHartState" setter="set_hart_state" getter="get_hart_state">
+			The internal [RVHartState] for this HART. Stores register info as well as pending exception/interrupt.
+		</member>
+		<member name="heap_address" type="int" setter="set_heap_address" getter="get_heap_address" default="-1">
+			Where the Heap is currently located. Not required for running code.
+		</member>
+		<member name="mret_address" type="int" setter="set_mret_address" getter="get_mret_address" default="4294967288">
+			The location of the mret instruction in memory. [b]NOTE:[/b] This will probably go away, it's a shortcut to not have to inject an mret instruction onto the bus and also not have to pull the mret code out of the underlying rv library.
+		</member>
+		<member name="stack_address" type="int" setter="set_stack_address" getter="get_stack_address" default="-1">
+			Where the Heap is currently located. Not required for running code, but any dereferencing of the address in sp in the running code will cause an exception unless sp is set up by the code manually.
+		</member>
+	</members>
+	<signals>
+		<signal name="breakpoint">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an ebreak instruction in code.
+			</description>
+		</signal>
+		<signal name="except_instruction_alignment">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an Instruction Alignment exception, meaning it wasn't aligned to the 32bit boundary (or 16bit for compressed instructions).
+			</description>
+		</signal>
+		<signal name="except_instruction_fault">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an Instruction Fault exception, meaning the instruction can't be handled properly or there is a pending exception/interrupt unhandled.
+			</description>
+		</signal>
+		<signal name="except_load_alignment">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an exception where attempting a load wasn't along the correct boundary.
+			</description>
+		</signal>
+		<signal name="except_load_fault">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an exception trying to perform a load operation on memory. Usually means the address doesn't have an underlying bus to service it.
+			</description>
+		</signal>
+		<signal name="except_store_alignment">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an exception where attempting a store wasn't along the correct boundary.
+			</description>
+		</signal>
+		<signal name="except_store_fault">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an exception trying to perform a store operation on memory. Usually means the address doesn't have an underlying bus to service it, or the bus was read-only.
+			</description>
+		</signal>
+		<signal name="external_interrupt">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an external interrupt is waiting to be handled.
+			</description>
+		</signal>
+		<signal name="illegal_instruction">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is an illegal instruction, such as unknown or not allowed in the given [member RVHartState.priv] level.
+			</description>
+		</signal>
+		<signal name="instruction_page_fault">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that a page fault happend when operating on an instruction.
+			</description>
+		</signal>
+		<signal name="load_page_fault">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that a page fault happend when performing a load operation.
+			</description>
+		</signal>
+		<signal name="machine_system_call">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that an ecall happened that requires servicing at the machine level/priviledge.
+				[b]NOTE:[/b] The HART will already have [member RVHartState.priv] set to 3.
+			</description>
+		</signal>
+		<signal name="software_interrupt">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that a pending timer interrupt is waiting.
+			</description>
+		</signal>
+		<signal name="store_page_fault">
+			<param index="0" name="hart" type="RVHart" />
+				Emitted when there is that a page fault happend when performing a store operation.
+			<description>
+			</description>
+		</signal>
+		<signal name="supervisor_system_call">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that an ecall happened that requires servicing at the supervisor level/priviledge.
+				[b]NOTE:[/b] The HART will already have [member RVHartState.priv] set to 1.
+			</description>
+		</signal>
+		<signal name="timer_interrupt">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that a pending timer interrupt is waiting.
+			</description>
+		</signal>
+		<signal name="user_system_call">
+			<param index="0" name="hart" type="RVHart" />
+			<description>
+				Emitted when there is that an ecall happened that requires servicing at the user level/priviledge.
+				[b]NOTE:[/b] The HART will already have [member RVHartState.priv] set to 0.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="EIALIGN" value="0" enum="RVExceptions">
+			Indicates an Instruction Alignment exception, meaning it wasn't aligned to the 32bit boundary (or 16bit for compressed instructions). See [signal except_instruction_alignment].
+		</constant>
+		<constant name="EIFAULT" value="1" enum="RVExceptions">
+			Indicates an Instruction Fault exception, meaning the instruction can't be handled properly or there is a pending exception/interrupt unhandled. See [signal except_instruction_fault].
+		</constant>
+		<constant name="EILL" value="2" enum="RVExceptions">
+			Indicates an illegal instruction, such as unknown or not allowed in the given [member RVHartState.priv] level. See [signal illegal_instruction].
+		</constant>
+		<constant name="EBP" value="3" enum="RVExceptions">
+			Indicates an ebreak instruction in code. See [signal breakpoint].
+		</constant>
+		<constant name="ELALIGN" value="4" enum="RVExceptions">
+			Indicates an exception where attempting a load wasn't along the correct boundary. See [signal except_load_alignment].
+		</constant>
+		<constant name="ELFAULT" value="5" enum="RVExceptions">
+			Indicates an exception trying to perform a load operation on memory. Usually means the address doesn't have an underlying bus to service it. See [signal except_load_fault].
+		</constant>
+		<constant name="ESALIGN" value="6" enum="RVExceptions">
+			Indicates an exception where attempting a store wasn't along the correct boundary. See [signal except_store_alignment].
+		</constant>
+		<constant name="ESFAULT" value="7" enum="RVExceptions">
+			Indicates an exception trying to perform a store operation on memory. Usually means the address doesn't have an underlying bus to service it, or the bus was read-only. See [signal except_store_fault].
+		</constant>
+		<constant name="EUECALL" value="8" enum="RVExceptions">
+			Indicates an ecall happened that requires servicing at the user level/priviledge. See [signal user_system_call].
+		</constant>
+		<constant name="ESECALL" value="9" enum="RVExceptions">
+			Indicates an ecall happened that requires servicing at the supervisor level/priviledge. See [signal supervisor_system_call].
+		</constant>
+		<constant name="EMECALL" value="11" enum="RVExceptions">
+			Indicates an ecall happened that requires servicing at the machine level/priviledge. See [signal machine_system_call].
+		</constant>
+		<constant name="EIPAGE" value="12" enum="RVExceptions">
+			Indicates a page fault happend when operating on an instruction. See [signal instruction_page_fault].
+		</constant>
+		<constant name="ELPAGE" value="13" enum="RVExceptions">
+			Indicates a page fault happend when performing a load operation. See [signal load_page_fault].
+		</constant>
+		<constant name="ESPAGE" value="15" enum="RVExceptions">
+			Indicates a page fault happend when performing a store operation. See [signal store_page_fault].
+		</constant>
+		<constant name="ETRAP_NONE" value="-2147483632" enum="RVExceptions">
+			Indicates that there was no trap caught, and the system performed correctly.
+		</constant>
+		<constant name="ETRAP_WFI" value="-2147483631" enum="RVExceptions">
+			Indicates that the system is trapped waiting for an interrupt.
+		</constant>
+	</constants>
+</class>

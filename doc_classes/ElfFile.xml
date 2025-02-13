@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ElfFile" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		ELF file holder
+	</brief_description>
+	<description>
+		Holds information about an ELF file or set of data. Can be used to get [RVMemoryDevice]s to be loaded into an [RVHart]; see [method generate_memory_areas].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="generate_memory_areas">
+			<return type="Dictionary" />
+			<description>
+				Generates the memory areas found in the LOAD program headers. The key is an integer indicating the offset to load the memory, and the value is an [RVMemoryDevice].
+			</description>
+		</method>
+		<method name="load_data">
+			<return type="void" />
+			<param index="0" name="data" type="Variant" />
+			<description>
+				The member version to load data. Takes in a Variant because that allows us to take in a [PackedByteArray] without having it copied. Will do nothing if not passed a [PackedByteArray].
+				Check [member header] and [member program_headers] for the loaded information.
+			</description>
+		</method>
+		<method name="load_elf_data" qualifiers="static">
+			<return type="ElfFile" />
+			<param index="0" name="data" type="Variant" />
+			<description>
+				The static version of [method load_data]. Returns null if data is not [PackedByteArray].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="header" type="ElfHeader" setter="" getter="get_header">
+			The loaded header data. If the ELF is invalid, this may be null.
+		</member>
+		<member name="loaded" type="bool" setter="" getter="get_loaded" default="false">
+			Indicates if the file was successfully loaded. Does not indicate that the header and program headers are valid, just that they loaded.
+		</member>
+		<member name="program_headers" type="ElfProgramHeader[]" setter="" getter="get_program_headers" default="[]">
+			The array of program headers. May be empty or null if the ELF data loaded was invalid.
+		</member>
+	</members>
+</class>

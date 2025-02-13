@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ElfProgramHeader" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Program Header for ELF
+	</brief_description>
+	<description>
+		Holds information about a single program header section. These are used mainly for setting up the memory regions needed to run a program, including executable and data regions.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_valid">
+			<return type="bool" />
+			<description>
+				Returns if this header is valid, i.e. all values conform to the spec. Currently it mishandles anything in the OS_LOW/OS_HIGH and PROC_LOW/PROC_HIGH spaces.
+			</description>
+		</method>
+		<method name="load_program_headers" qualifiers="static">
+			<return type="ElfProgramHeader[]" />
+			<param index="0" name="header" type="ElfHeader" />
+			<param index="1" name="data" type="PackedByteArray" />
+			<description>
+				Loads all program headers from the input [param data]. [param data] must be from the start of the ELF data, including header, even though it's passed in as [param header].
+				Uses [param header] to get the bit size and offsets to the pointer header table.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="align" type="int" setter="set_align" getter="get_align" default="0">
+			Alignment of this header. See the ELF specs for a definition, but essentially, the header is only valid if
+			[code]((file_offset % align) == (virtual_address % align))[/code]
+		</member>
+		<member name="file_offset" type="int" setter="set_file_offset" getter="get_file_offset" default="0">
+			Where in the file this header starts.
+		</member>
+		<member name="flags" type="int" setter="set_flags" getter="get_flags" default="0">
+			Flags for this program header. See [enum Flags].
+		</member>
+		<member name="physical_address" type="int" setter="set_physical_address" getter="get_physical_address" default="0">
+			The address to load this in physically. Not really used, only matters when different from [member virtual_address].
+		</member>
+		<member name="size_in_file" type="int" setter="set_size_in_file" getter="get_size_in_file" default="0">
+			How big the program header is in the file. Used to read the full contents.
+		</member>
+		<member name="size_in_memory" type="int" setter="set_size_in_memory" getter="get_size_in_memory" default="0">
+			How big the program header is once loaded into memory. May be bigger than [member size_in_file] to save space in the file.
+		</member>
+		<member name="type" type="int" setter="set_type" getter="get_type" enum="ElfProgramHeader.HeaderType" default="0">
+			What the header type is. [constant LOAD] is the only one currently that matters, as it is used to create the memory regions needed to execute this program.
+		</member>
+		<member name="virtual_address" type="int" setter="set_virtual_address" getter="get_virtual_address" default="0">
+			The virtual address, meaning where this chunk should be loaded into the HART.
+			Address translation means if this is different from [member physical_address], translation has to be set up.
+		</member>
+	</members>
+	<constants>
+		<constant name="TYPE_32" value="0" enum="Offsets_32">
+			Offset of the [member type] value when 32bits.
+		</constant>
+		<constant name="FLAGS_32" value="24" enum="Offsets_32">
+			Offset of the [member flags] value when 32bits.
+		</constant>
+		<constant name="OFFSET_32" value="4" enum="Offsets_32">
+			Offset of the [member file_offset] value when 32bits.
+		</constant>
+		<constant name="VADDR_32" value="8" enum="Offsets_32">
+			Offset of the [member virtual_address] value when 32bits.
+		</constant>
+		<constant name="PADDR_32" value="12" enum="Offsets_32">
+			Offset of the [member physical_address] value when 32bits.
+		</constant>
+		<constant name="FILESZ_32" value="16" enum="Offsets_32">
+			Offset of the [member size_in_file] value when 32bits.
+		</constant>
+		<constant name="MEMSZ_32" value="20" enum="Offsets_32">
+			Offset of the [member size_in_memory] value when 32bits.
+		</constant>
+		<constant name="ALIGN_32" value="28" enum="Offsets_32">
+			Offset of the [member align] value when 32bits.
+		</constant>
+		<constant name="TYPE_64" value="0" enum="Offsets_64">
+			Offset of the [member type] value when 64bits.
+		</constant>
+		<constant name="FLAGS_64" value="4" enum="Offsets_64">
+			Offset of the [member flags] value when 64bits.
+		</constant>
+		<constant name="OFFSET_64" value="8" enum="Offsets_64">
+			Offset of the [member file_offset] value when 64bits.
+		</constant>
+		<constant name="VADDR_64" value="16" enum="Offsets_64">
+			Offset of the [member virtual_address] value when 64bits.
+		</constant>
+		<constant name="PADDR_64" value="24" enum="Offsets_64">
+			Offset of the [member physical_address] value when 64bits.
+		</constant>
+		<constant name="FILESZ_64" value="32" enum="Offsets_64">
+			Offset of the [member size_in_file] value when 64bits.
+		</constant>
+		<constant name="MEMSZ_64" value="40" enum="Offsets_64">
+			Offset of the [member size_in_memory] value when 64bits.
+		</constant>
+		<constant name="ALIGN_64" value="48" enum="Offsets_64">
+			Offset of the [member align] value when 64bits.
+		</constant>
+		<constant name="PH_NULL" value="0" enum="HeaderType">
+			Null header type. Usually indicates a deleted header.
+		</constant>
+		<constant name="LOAD" value="1" enum="HeaderType">
+			A header that should be loaded.
+		</constant>
+		<constant name="DYNAMIC" value="2" enum="HeaderType">
+			Dynamic linking information, unsupported.
+		</constant>
+		<constant name="INTERP" value="3" enum="HeaderType">
+			Interpreter information, unsupported.
+		</constant>
+		<constant name="NOTE" value="4" enum="HeaderType">
+			Auxilary information, unsupported.
+		</constant>
+		<constant name="SHLIB" value="5" enum="HeaderType">
+			Reserved, unsupported.
+		</constant>
+		<constant name="PHDR" value="6" enum="HeaderType">
+			Segment that contains this program header, unsupported.
+		</constant>
+		<constant name="TLS" value="7" enum="HeaderType">
+			Thread local storage, unsupported.
+		</constant>
+		<constant name="LOW_OS" value="1610612736" enum="HeaderType">
+		</constant>
+		<constant name="OS_RANGE" value="1610612737" enum="HeaderType">
+		</constant>
+		<constant name="HIGH_OS" value="1879048191" enum="HeaderType">
+		</constant>
+		<constant name="LOW_PROC" value="1879048192" enum="HeaderType">
+		</constant>
+		<constant name="PROC_RANGE" value="1879048193" enum="HeaderType">
+		</constant>
+		<constant name="HIGH_PROC" value="2147483647" enum="HeaderType">
+		</constant>
+		<constant name="EXECUTABLE" value="1" enum="Flags">
+			Indicates this header is executable.
+		</constant>
+		<constant name="WRITEABLE" value="2" enum="Flags">
+			Indicates this header is writable.
+		</constant>
+		<constant name="READABLE" value="4" enum="Flags">
+			Indicates this header is readable.
+		</constant>
+		<constant name="NONE" value="0" enum="Flags">
+			No flags.
+		</constant>
+	</constants>
+</class>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RVBusDevice" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		RISC-V Bus Device
+	</brief_description>
+	<description>
+		Emulates an arbitrary bus device that can receive read, write, and size commands.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_get_size" qualifiers="virtual">
+			<return type="int" />
+			<description>
+				Override in subclasses so that the RISC-V HART can determine the bus device's size.
+			</description>
+		</method>
+		<method name="_read" qualifiers="virtual">
+			<return type="Variant" />
+			<param index="0" name="offset" type="int" />
+			<param index="1" name="size" type="int" />
+			<description>
+				Override in subclasses so that the RISC-V HART can perform a read operation.
+			</description>
+		</method>
+		<method name="_set_size" qualifiers="virtual">
+			<return type="int" enum="RVMemResult" />
+			<param index="0" name="new_size" type="int" />
+			<description>
+				Override in subclasses so that the RISC-V HART can try to change the size of the bus device. May be hard coded to return [constant BAD].
+			</description>
+		</method>
+		<method name="_write" qualifiers="virtual">
+			<return type="int" enum="RVMemResult" />
+			<param index="0" name="offset" type="int" />
+			<param index="1" name="new_data" type="PackedByteArray" />
+			<description>
+				Override in subclasses so that the RISC-V HART can perform a write operation.
+			</description>
+		</method>
+		<method name="get_size">
+			<return type="int" />
+			<description>
+				Call to get the size of the bus device. Calls the virtual function [method _get_size] under the hood.
+			</description>
+		</method>
+		<method name="read">
+			<return type="Variant" />
+			<param index="0" name="offset" type="int" />
+			<param index="1" name="size" type="int" />
+			<description>
+				Call to perform a read operation on the bus device. Under the hood calls [method _read]. Please note, this offset is relative to this bus device, not the global state.
+				Will return either a [PackedByteArray] on success or [enum RVMemResult] on error.
+			</description>
+		</method>
+		<method name="set_size">
+			<return type="int" enum="RVMemResult" />
+			<param index="0" name="new_size" type="int" />
+			<description>
+				Call to set the size of the bus device. Calls the virtual function [method _set_size]e under the hood.
+			</description>
+		</method>
+		<method name="write">
+			<return type="int" enum="RVMemResult" />
+			<param index="0" name="offset" type="int" />
+			<param index="1" name="new_data" type="PackedByteArray" />
+			<description>
+				Call to perform a write operation on the bus device. Under the hood calls [method _write]. Please note, this offset is relative to this bus device, not the global state.
+			</description>
+		</method>
+	</methods>
+	<constants>
+		<constant name="MEM_OK" value="0" enum="RVMemResult">
+			Indicates that the memory operation is good.
+		</constant>
+		<constant name="BAD" value="1" enum="RVMemResult">
+			Indicates a generic bad memory operation.
+		</constant>
+		<constant name="BAD_ALIGN" value="2" enum="RVMemResult">
+			Indicates that the address being accessed isn't allowed due to alignment.
+		</constant>
+		<constant name="PAGEFAULT" value="3" enum="RVMemResult">
+			Indicates that the bus had a page fault occur. Currently unused, but defined in the underlying rv library.
+		</constant>
+	</constants>
+</class>

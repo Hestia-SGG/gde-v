@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RVHeapDevice" inherits="RVMemoryDevice" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		RISC-V Heap
+	</brief_description>
+	<description>
+		A specialized Memory Device with an exposed underlying memory size property.
+		To save size, the get/set size operations will change how big this device [b]appears[/b] to the RISC-V HART; the underlying [PackedByteArray]'s size won't be changed. This allows allocating large regions of memory without actually allocating host memory for it.
+		To change the size of the [PackedByteArray], use [member underlying_mem_size].
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="underlying_mem_size" type="int" setter="set_underlying_mem_size" getter="get_underlying_mem_size" default="0">
+			Use this to change the size of the [PackedByteArray] underneath. Cannot be larger than the value returned by get_size().
+		</member>
+	</members>
+</class>

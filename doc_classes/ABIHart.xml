@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ABIHart" inherits="RVHart" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		RISC-V HARdware Thread with ABI
+	</brief_description>
+	<description>
+		RISC-V HART with the ABI ecalls broken out into individual signals. On seeing that an exception is an ecall, it will try to translate the a7 register into a syscall as defined in [enum SyscallMappings].
+		If the syscall isn't valid or isn't handled, or it isn't an ecall, this HART then tries to emit a signal as per [RVHart].
+	</description>
+	<tutorials>
+	</tutorials>
+	<signals>
+		<signal name="pending_access">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_brk">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_chdir">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_clock_gettime64">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_close">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_dup">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_exit">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_exit_group">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_faccessat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_fcntl">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_fstat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_fstatat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getcwd">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getdents">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getegid">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_geteuid">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getgid">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getmainvars">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getpid">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_gettimeofday">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_getuid">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_kill">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_link">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_lseek">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_lstat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_mkdir">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_mmap">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_mremap">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_munmap">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_open">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_openat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_pread">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_pwrite">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_read">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_rt_sigaction">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_stat">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_time">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_times">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_uname">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_unlink">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_write">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+		<signal name="pending_writev">
+			<param index="0" name="hart" type="ABIHart" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="getcwd" value="17" enum="SyscallMappings">
+		</constant>
+		<constant name="dup" value="23" enum="SyscallMappings">
+		</constant>
+		<constant name="fcntl" value="25" enum="SyscallMappings">
+		</constant>
+		<constant name="faccessat" value="48" enum="SyscallMappings">
+		</constant>
+		<constant name="chdir" value="49" enum="SyscallMappings">
+		</constant>
+		<constant name="openat" value="56" enum="SyscallMappings">
+		</constant>
+		<constant name="close" value="57" enum="SyscallMappings">
+		</constant>
+		<constant name="getdents" value="61" enum="SyscallMappings">
+		</constant>
+		<constant name="lseek" value="62" enum="SyscallMappings">
+		</constant>
+		<constant name="read" value="63" enum="SyscallMappings">
+		</constant>
+		<constant name="write" value="64" enum="SyscallMappings">
+		</constant>
+		<constant name="writev" value="66" enum="SyscallMappings">
+		</constant>
+		<constant name="pread" value="67" enum="SyscallMappings">
+		</constant>
+		<constant name="pwrite" value="68" enum="SyscallMappings">
+		</constant>
+		<constant name="fstatat" value="79" enum="SyscallMappings">
+		</constant>
+		<constant name="fstat" value="80" enum="SyscallMappings">
+		</constant>
+		<constant name="exit" value="93" enum="SyscallMappings">
+		</constant>
+		<constant name="exit_group" value="94" enum="SyscallMappings">
+		</constant>
+		<constant name="kill" value="129" enum="SyscallMappings">
+		</constant>
+		<constant name="rt_sigaction" value="134" enum="SyscallMappings">
+		</constant>
+		<constant name="times" value="153" enum="SyscallMappings">
+		</constant>
+		<constant name="uname" value="160" enum="SyscallMappings">
+		</constant>
+		<constant name="gettimeofday" value="169" enum="SyscallMappings">
+		</constant>
+		<constant name="getpid" value="172" enum="SyscallMappings">
+		</constant>
+		<constant name="getuid" value="174" enum="SyscallMappings">
+		</constant>
+		<constant name="geteuid" value="175" enum="SyscallMappings">
+		</constant>
+		<constant name="getgid" value="176" enum="SyscallMappings">
+		</constant>
+		<constant name="getegid" value="177" enum="SyscallMappings">
+		</constant>
+		<constant name="brk" value="214" enum="SyscallMappings">
+		</constant>
+		<constant name="munmap" value="215" enum="SyscallMappings">
+		</constant>
+		<constant name="mremap" value="216" enum="SyscallMappings">
+		</constant>
+		<constant name="mmap" value="222" enum="SyscallMappings">
+		</constant>
+		<constant name="clock_gettime64" value="403" enum="SyscallMappings">
+		</constant>
+		<constant name="open" value="1024" enum="SyscallMappings">
+		</constant>
+		<constant name="link" value="1025" enum="SyscallMappings">
+		</constant>
+		<constant name="unlink" value="1026" enum="SyscallMappings">
+		</constant>
+		<constant name="mkdir" value="1030" enum="SyscallMappings">
+		</constant>
+		<constant name="access" value="1033" enum="SyscallMappings">
+		</constant>
+		<constant name="stat" value="1038" enum="SyscallMappings">
+		</constant>
+		<constant name="lstat" value="1039" enum="SyscallMappings">
+		</constant>
+		<constant name="time" value="1062" enum="SyscallMappings">
+		</constant>
+		<constant name="getmainvars" value="2011" enum="SyscallMappings">
+		</constant>
+	</constants>
+</class>

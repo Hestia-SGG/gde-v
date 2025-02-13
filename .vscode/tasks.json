@@ -27,6 +27,22 @@
                 "-e"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "Document generation",
+            "windows": {
+                "command": "${config:godot_path.win}"
+            },
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/test/project/"
+            },
+            "args": [
+                "--doctool",
+                "../../",
+                "--gdextension-docs"
+            ],
+            "problemMatcher": []
         }
     ],
     "inputs": [

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ElfHeader" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		ELF Header
+	</brief_description>
+	<description>
+		Can be used to store the Header information found in an ELF, and decode it from a file/data. See [method load_header].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_expected_header_size">
+			<return type="int" />
+			<description>
+				Gets how big this header is expected to be based on the read in [member bit_size].
+			</description>
+		</method>
+		<method name="get_pointer_size">
+			<return type="int" />
+			<description>
+				Gets how big a pointer is based on the read in [member bit_size].
+			</description>
+		</method>
+		<method name="is_valid">
+			<return type="bool" />
+			<description>
+				Returns if this header is valid, i.e. all values conform to the spec. Currently it mishandles anything in the OS_LOW/OS_HIGH and PROC_LOW/PROC_HIGH spaces.
+			</description>
+		</method>
+		<method name="load_header" qualifiers="static">
+			<return type="ElfHeader" />
+			<param index="0" name="data" type="PackedByteArray" />
+			<description>
+				Takes in the [param data] and tries to parse it. If successful, returns an ElfHeader object. Otherwise returns null. Usually called as part of [method ElfFile.load_elf_data].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="abi_version" type="int" setter="set_abi_version" getter="get_abi_version" default="0">
+			Specific to the ABI being run on.
+		</member>
+		<member name="bit_size" type="int" setter="set_bit_size" getter="get_bit_size" enum="ElfHeader.BitSize" default="0">
+			Indicates the size of the architecture this is for. [constant SIZE_32] (1) means 32 bit, and [constant SIZE_64] (2) means 64 bit.
+			Any other value is invalid and be translated to [constant INVALID_BITSIZE].
+		</member>
+		<member name="elf_version" type="int" setter="set_elf_version" getter="get_elf_version" default="0">
+			Indicates the ELF version. Must be any value other than -1.
+		</member>
+		<member name="endianness" type="int" setter="set_endianness" getter="get_endianness" enum="ElfHeader.Endianness" default="0">
+			The endianness of this file. [constant LITTLE] (1) indicates little endian, and [constant BIG] (2) indicates big endian.
+			Any other value is invalid and be translated to [constant INVALID_ENDIANNESS].
+		</member>
+		<member name="entry_point" type="int" setter="set_entry_point" getter="get_entry_point" default="0">
+			Where the program should start executing after loading into memory.
+		</member>
+		<member name="flags" type="int" setter="set_flags" getter="get_flags" default="0">
+			The flags for the program. Currently unsupported.
+		</member>
+		<member name="header_size" type="int" setter="set_header_size" getter="get_header_size" default="0">
+			How big this header is. 52 bytes for 32 bit and 64 bytes for 64 bit. Any other bit size is invalid.
+		</member>
+		<member name="machine" type="int" setter="set_machine" getter="get_machine" default="0">
+			Target machine ISA. Currently only supports 0xF3 (RISC-V).
+		</member>
+		<member name="magic" type="PackedByteArray" setter="set_magic" getter="get_magic" default="PackedByteArray()">
+			The "magic" for the loaded file. Should be [0x7F, 0x45, 0x4c, 0x46].
+		</member>
+		<member name="os_abi" type="int" setter="set_os_abi" getter="get_os_abi" default="0">
+			The ABI for the OS. Currently unsupported, all are assumed to be System-V.
+		</member>
+		<member name="program_header_count" type="int" setter="set_program_header_count" getter="get_program_header_count" default="0">
+			The number of program headers in this file.
+		</member>
+		<member name="program_header_entry_size" type="int" setter="set_program_header_entry_size" getter="get_program_header_entry_size" default="0">
+			How big each program header is. This and [member program_header_count] are used to determine how big of a memory region to read from the ELF data.
+		</member>
+		<member name="program_header_offset" type="int" setter="set_program_header_offset" getter="get_program_header_offset" default="0">
+			Where the program header table starts in the file.
+		</member>
+		<member name="section_header_count" type="int" setter="set_section_header_count" getter="get_section_header_count" default="0">
+			The number of section headers in this file. Currently unsupported.
+		</member>
+		<member name="section_header_entry_size" type="int" setter="set_section_header_entry_size" getter="get_section_header_entry_size" default="0">
+			How big each section header is. This and [member section_header_count] are used to determine how big of a memory region to read from the ELF data.
+			Currently unsupported.
+		</member>
+		<member name="section_header_name_index" type="int" setter="set_section_header_name_index" getter="get_section_header_name_index" default="0">
+			The index of the section header entry that contains the names. Currently unsupported.
+		</member>
+		<member name="section_header_offset" type="int" setter="set_section_header_offset" getter="get_section_header_offset" default="0">
+			Where the section header table starts in the file. Currently unsupported.
+		</member>
+		<member name="type" type="int" setter="set_type" getter="get_type" enum="ElfHeader.ObjectType" default="-1">
+			The type of ELF data this is. See [enum ObjectType].
+		</member>
+		<member name="version" type="int" setter="set_version" getter="get_version" default="0">
+			The version of the elf file. Currently ignored.
+		</member>
+	</members>
+	<constants>
+		<constant name="MAGIC" value="0" enum="Offsets">
+			The offset in the header to [member magic].
+		</constant>
+		<constant name="BIT_SIZE" value="4" enum="Offsets">
+			The offset in the header to [member bit_size].
+		</constant>
+		<constant name="ENDIANNESS" value="5" enum="Offsets">
+			The offset in the header to [member endianness].
+		</constant>
+		<constant name="VERSION" value="6" enum="Offsets">
+			The offset in the header to [member version].
+		</constant>
+		<constant name="OS_ABI" value="7" enum="Offsets">
+			The offset in the header to [member os_abi].
+		</constant>
+		<constant name="ABI_VER" value="8" enum="Offsets">
+			The offset in the header to [member abi_version].
+		</constant>
+		<constant name="PAD_1_BEGIN" value="9" enum="Offsets">
+			The offset in the header to the padding defined after [constant ABI_VER].
+		</constant>
+		<constant name="TYPE" value="16" enum="Offsets">
+			The offset in the header to [member flag].
+		</constant>
+		<constant name="MACHINE" value="18" enum="Offsets">
+			The offset in the header to [member machine].
+		</constant>
+		<constant name="ELF_VERSION" value="20" enum="Offsets">
+			The offset in the header to [member elf_version].
+		</constant>
+		<constant name="ENTRY_BASE" value="24" enum="Offsets">
+			The offset in the header to [member entry_point].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="PH_OFF_BASE" value="28" enum="Offsets">
+			The offset in the header to [member program_header_offset].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="SH_OFF_BASE" value="32" enum="Offsets">
+			The offset in the header to [member section_header_offset].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="FLAGS_BASE" value="36" enum="Offsets">
+			The offset in the header to [member flags].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="HEADER_SIZE_BASE" value="40" enum="Offsets">
+			The offset in the header to [member header_size].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="PH_ENT_SIZE_BASE" value="42" enum="Offsets">
+			The offset in the header to [member program_header_entry_size].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="PH_NUM_BASE" value="44" enum="Offsets">
+			The offset in the header to [member program_header_count].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="SH_ENT_SIZE_BASE" value="46" enum="Offsets">
+			The offset in the header to [member section_header_entry_size].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="SH_NUM_BASE" value="48" enum="Offsets">
+			The offset in the header to [member section_header_count].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="SECTION_HEADER_NAME_INDX_BASE" value="50" enum="Offsets">
+			The offset in the header to [member section_header_name_index].
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="END_BASE" value="52" enum="Offsets">
+			The offset to the end of the file.
+			This is the 32 bit offset, used to calculate the 64 bit offset.
+		</constant>
+		<constant name="LITTLE" value="1" enum="Endianness">
+		</constant>
+		<constant name="BIG" value="2" enum="Endianness">
+		</constant>
+		<constant name="INVALID_ENDIANNESS" value="0" enum="Endianness">
+		</constant>
+		<constant name="INVALID_BITSIZE" value="0" enum="BitSize">
+		</constant>
+		<constant name="SIZE_32" value="1" enum="BitSize">
+		</constant>
+		<constant name="SIZE_64" value="2" enum="BitSize">
+		</constant>
+		<constant name="INVALID_OBJTYPE" value="-1" enum="ObjectType">
+			Invalid object type.
+		</constant>
+		<constant name="NONE" value="0" enum="ObjectType">
+			Unknown object.
+		</constant>
+		<constant name="RELOC" value="1" enum="ObjectType">
+			Relocatable file. Currently unsupported.
+		</constant>
+		<constant name="EXEC" value="2" enum="ObjectType">
+			Exectuable file.
+		</constant>
+		<constant name="SHARED" value="3" enum="ObjectType">
+			Shared library. Currently unsupported.
+		</constant>
+		<constant name="DYNAMIC" value="3" enum="ObjectType">
+			Secondary name for [constant SHARED].
+		</constant>
+		<constant name="CORE" value="4" enum="ObjectType">
+			Core file. Currently unsupported.
+		</constant>
+		<constant name="LOW_OS" value="65024" enum="ObjectType">
+			The start of OS specific types.
+		</constant>
+		<constant name="OS_RANGE" value="65025" enum="ObjectType">
+			A value in the OS specific range.
+		</constant>
+		<constant name="HIGH_OS" value="65279" enum="ObjectType">
+			The end of the OS specific types.
+		</constant>
+		<constant name="LOW_PROC" value="65280" enum="ObjectType">
+			The start of the Processor specific types.
+		</constant>
+		<constant name="PROC_RANGE" value="65281" enum="ObjectType">
+			A value in the Processor specific range.
+		</constant>
+		<constant name="HIGH_PROC" value="65535" enum="ObjectType">
+			The end of the Processor specific types.
+		</constant>
+	</constants>
+</class>
