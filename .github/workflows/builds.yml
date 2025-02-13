@@ -308,6 +308,8 @@ jobs:
           path: |
             ${{ github.workspace }}/bin/
             ${{ github.workspace }}/gde-v.gdextension
+            ${{ github.workspace }}/LICENSE
+            ${{ github.workspace }}/LICENSE.extern
 
   # Merges all the build artifacts together into a single gde_v artifact.
   # If you comment out this step, all the builds will be uploaded individually.
