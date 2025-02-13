@@ -1,6 +1,8 @@
 # gde-v
 RISC-V core for Godot 4.x
 
+<img src="https://raw.githubusercontent.com/Hestia-SGG/gde-v/refs/heads/main/icon.png" width=256 height=256 />
+
 ## Usage
 To be added! For now, there is some info in the test project directory on how to use it.
 
