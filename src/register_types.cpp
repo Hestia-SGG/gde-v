@@ -1,6 +1,7 @@
 #include "register_types.h"
 
 #include "gde-v.h"
+#include "gde-virtfs/filesys.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -23,6 +24,11 @@ void initialize_gdev_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(ElfHeader);
 	GDREGISTER_CLASS(ElfProgramHeader);
 	GDREGISTER_CLASS(ElfFile);
+
+	GDREGISTER_VIRTUAL_CLASS(VirtFileHandle);
+	GDREGISTER_VIRTUAL_CLASS(VirtFile);
+	GDREGISTER_VIRTUAL_CLASS(VirtFileSystem);
+	GDREGISTER_CLASS(VirtFSDispatcher);
 }
 
 // Standard uninitialization function for Godot.

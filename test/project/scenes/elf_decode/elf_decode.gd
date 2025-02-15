@@ -112,6 +112,8 @@ func _ready():
 	hart.pending_brk.connect(test_brk_call)
 	
 	var _debug = hart.bus_read(elf_file_in.header.entry_point, 12)
+	
+	var fs_dispatcher = VirtFSDispatcher.new()
 	pass
 
 func perform_hart_step():

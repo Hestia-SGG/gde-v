@@ -19,4 +19,31 @@
 #define RV_ENUM_WRAP(x) ENUM_WRAP(x, RV_)
 #define SYS_ENUM_WRAP(x) ENUM_WRAP(x, SYS_)
 
+#define VIRT_CALL_WRAPPER0(c, f) void c::f(){ \
+    if(GDVIRTUAL_CALL(_##f)){ return; } \
+    else if(this->has_method("_"#f)){ this->call("_"#f); } \
+    else this->_##f(); \
+}
+
+#define VIRT_CALL_WRAPPER0R(r, c, f) r c::f(){ \
+    r ret;\
+    if(GDVIRTUAL_CALL(_##f, ret)){ return ret; } \
+    else if(this->has_method("_"#f)){ return VariantCaster<r>::cast(this->call("_"#f)); } \
+    else return this->_##f(); \
+}
+
+#define VIRT_CALL_WRAPPER1R(r, c, f, t1, n1) r c::f(t1 n1){ \
+    r ret;\
+    if(GDVIRTUAL_CALL(_##f, n1, ret)){ return ret; } \
+    else if(this->has_method("_"#f)){ return VariantCaster<r>::cast(this->call("_"#f, n1)); } \
+    else return this->_##f(n1); \
+}
+
+#define VIRT_CALL_WRAPPER2R(r, c, f, t1, n1, t2, n2) r c::f(t1 n1, t2 n2){ \
+    r ret;\
+    if(GDVIRTUAL_CALL(_##f, n1, n2, ret)){ return ret; } \
+    else if(this->has_method("_"#f)){ return VariantCaster<r>::cast(this->call("_"#f, n1, n2)); } \
+    else return this->_##f(n1, n2); \
+}
+
 #endif
