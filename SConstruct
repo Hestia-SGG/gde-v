@@ -17,6 +17,7 @@ env.Append(CPPPATH=["include/","extern/rv/tools/linux/","extern/rv/","extern/new
 sources = Glob("src/register_types.cpp")
 sources = sources + Glob("src/gde-v/*.cpp")
 sources = sources + Glob("src/gdvirtfs/*.cpp")
+sources = sources + Glob("src/gdvirtfs/host/*.cpp")
 sources = sources + Glob("extern/rv/rv.c")
 
 if env["target"] in ["editor", "template_debug"]:

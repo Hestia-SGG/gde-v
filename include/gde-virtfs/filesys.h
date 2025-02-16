@@ -6,6 +6,7 @@
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/core/binder_common.hpp>
 #include <godot_cpp/core/gdvirtual.gen.inc>
+#include <godot_cpp/classes/file_access.hpp>
 
 #include <gde-v/utils.h>
 
@@ -77,9 +78,6 @@ public:
 class VirtFile : public Resource{
     GDCLASS(VirtFile, Resource)
 
-public:
-    
-
 protected:
     static void _bind_methods();
 
@@ -90,7 +88,9 @@ protected:
     String path, filename;
     String links_to;
 
-    virtual Ref<VirtFileHandle> _get_handle(){ return nullptr; }
+    virtual Ref<VirtFileHandle> _get_handle(FileAccess::ModeFlags flags){ return nullptr; }
+
+    virtual int64_t _get_size(){ return -1; }
 public:
     VirtFile();
     ~VirtFile(){}
@@ -116,8 +116,11 @@ public:
     String get_links_to(){ if(this->is_link()) return this->links_to; else return ""; }
     void set_links_to(String new_links_to){ if(this->is_link()) this->links_to = new_links_to;}
 
-    GDVIRTUAL0R(Ref<VirtFileHandle>, _get_handle)
-    Ref<VirtFileHandle> get_handle();
+    GDVIRTUAL1R(Ref<VirtFileHandle>, _get_handle, FileAccess::ModeFlags)
+    Ref<VirtFileHandle> get_handle(FileAccess::ModeFlags flags);
+
+    GDVIRTUAL0R(int64_t, _get_size)
+    int64_t get_size();
 };
 
 class VirtFSDispatcher;
@@ -132,7 +135,7 @@ protected:
     virtual Ref<VirtFile> _create_file(String filename, FileMode new_file_mode){ return nullptr; }
     virtual VirtFSResult _delete_file(String filename){ return VFS_GENERIC_ERROR; }
 
-    virtual Ref<VirtFile> _create_file_from_ref(Ref<VirtFile> new_file, bool duplicate = false){ return nullptr; }
+    virtual Ref<VirtFile> _create_file_from_ref(Ref<VirtFile> file_ref, String new_filename, bool duplicate = false){ return nullptr; }
 public:
     VirtFileSystem(){}
     ~VirtFileSystem(){}
@@ -145,8 +148,8 @@ public:
     VirtFSResult delete_file(String filename);
 
     //Specifically for copy and move support
-    GDVIRTUAL2R(Ref<VirtFile>, _create_file_from_ref, Ref<VirtFile>, bool)
-    Ref<VirtFile> create_file_from_ref(Ref<VirtFile> new_file, bool duplicate = false);
+    GDVIRTUAL3R(Ref<VirtFile>, _create_file_from_ref, Ref<VirtFile>, String, bool)
+    Ref<VirtFile> create_file_from_ref(Ref<VirtFile> file_ref, String new_filename, bool duplicate = false);
 };
 
 class VirtFSDispatcher : public Resource{

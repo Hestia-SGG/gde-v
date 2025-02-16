@@ -92,8 +92,8 @@ VirtFSResult VirtFSDispatcher::move_copy_file(String filename, String move_filen
 
     String move_filename_normalized = VirtFSDispatcher::normalize_path(move_filename);
 
-    old_file->set_path(move_filename_normalized.get_base_dir());
-    old_file->set_filename(move_filename_normalized.get_file());
+    //old_file->set_path(move_filename_normalized.get_base_dir());
+    //old_file->set_filename(move_filename_normalized.get_file());
 
     Ref<VirtFile> new_file = nullptr;
 
@@ -101,13 +101,15 @@ VirtFSResult VirtFSDispatcher::move_copy_file(String filename, String move_filen
         Ref<VirtFileSystem> cur_fs = this->fs_handlers[i];
         if(cur_fs.is_null()) continue;
 
-        new_file = cur_fs->create_file_from_ref(old_file, copy);
+        new_file = cur_fs->create_file_from_ref(old_file, move_filename_normalized, copy);
         if(new_file.is_valid()) break;
     }
 
     if(new_file.is_valid()){
+        // If the source and destination filesystems are the same, the underlying fs can choose to keep the same reference
+        // but repoint it. If not, and we aren't copying, delete the souce.
         VirtFSResult to_return = VFS_OK;
-        if(!copy) to_return = this->delete_file(filename_normalized);
+        if(new_file != old_file && !copy) to_return = this->delete_file(filename_normalized);
         return to_return;
     }
     else return VFS_GENERIC_ERROR;

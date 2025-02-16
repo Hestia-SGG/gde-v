@@ -10,6 +10,7 @@
 
 // Binds the getters and setters. Used mostly with GET_SET
 #define BIND_GET_SET(x, y, z, ...) ClassDB::bind_method(D_METHOD("get_" #x), &y::get_##x); ClassDB::bind_method(D_METHOD("set_" #x, __VA_ARGS__), &y::set_##x); ADD_PROPERTY(PropertyInfo(Variant::z, #x), "set_" #x, "get_" #x);
+#define BIND_GET_SET_HINT(x, y, z, t, h, ...) ClassDB::bind_method(D_METHOD("get_" #x), &y::get_##x); ClassDB::bind_method(D_METHOD("set_" #x, __VA_ARGS__), &y::set_##x); ADD_PROPERTY(PropertyInfo(Variant::z, #x, t, h), "set_" #x, "get_" #x);
 #define BIND_GET_NOSET(x, y, z)  ClassDB::bind_method(D_METHOD("get_" #x), &y::get_##x); ADD_PROPERTY(PropertyInfo(Variant::z, #x), "", "get_" #x);
 // This one is special as it adds a hint. Should bring it into the one above, but eh.
 #define BIND_GET_NOSET_HINT(x, y, z, t, h)  ClassDB::bind_method(D_METHOD("get_" #x), &y::get_##x); ADD_PROPERTY(PropertyInfo(Variant::z, #x, t, h), "", "get_" #x);
@@ -44,6 +45,13 @@
     if(GDVIRTUAL_CALL(_##f, n1, n2, ret)){ return ret; } \
     else if(this->has_method("_"#f)){ return VariantCaster<r>::cast(this->call("_"#f, n1, n2)); } \
     else return this->_##f(n1, n2); \
+}
+
+#define VIRT_CALL_WRAPPER3R(r, c, f, t1, n1, t2, n2, t3, n3) r c::f(t1 n1, t2 n2, t3 n3){ \
+    r ret;\
+    if(GDVIRTUAL_CALL(_##f, n1, n2, n3, ret)){ return ret; } \
+    else if(this->has_method("_"#f)){ return VariantCaster<r>::cast(this->call("_"#f, n1, n2, n3)); } \
+    else return this->_##f(n1, n2, n3); \
 }
 
 #endif

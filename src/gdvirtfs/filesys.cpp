@@ -56,11 +56,12 @@ void VirtFile::_bind_methods(){
     BIND_GET_SET(filename, VirtFile, STRING, "new_val")
     BIND_GET_SET(links_to, VirtFile, STRING, "new_links_to")
 
-    GDVIRTUAL_BIND(_get_handle);
-    ClassDB::bind_method(D_METHOD("get_handle"), &VirtFile::get_handle);
+    GDVIRTUAL_BIND(_get_handle, "flags");
+    ClassDB::bind_method(D_METHOD("get_handle", "flags"), &VirtFile::get_handle);
 }
 
-VIRT_CALL_WRAPPER0R(Ref<VirtFileHandle>, VirtFile, get_handle)
+VIRT_CALL_WRAPPER1R(Ref<VirtFileHandle>, VirtFile, get_handle, FileAccess::ModeFlags, flags)
+VIRT_CALL_WRAPPER0R(int64_t, VirtFile, get_size)
 
 VirtFile::VirtFile(){
     this->owner_uid = this->group_uid = -1;
@@ -80,14 +81,14 @@ void VirtFileSystem::_bind_methods(){
     GDVIRTUAL_BIND(_find_file, "filename");
     GDVIRTUAL_BIND(_create_file, "filename", "new_file_mode");
     GDVIRTUAL_BIND(_delete_file, "filename");
-    GDVIRTUAL_BIND(_create_file_from_ref, "new_file", "duplicate");
+    GDVIRTUAL_BIND(_create_file_from_ref, "file_ref", "new_filename", "duplicate");
     ClassDB::bind_method(D_METHOD("find_file", "filename"), &VirtFileSystem::find_file);
     ClassDB::bind_method(D_METHOD("create_file", "filename", "new_file_mode"), &VirtFileSystem::create_file);
     ClassDB::bind_method(D_METHOD("delete_file", "filename"), &VirtFileSystem::delete_file);
-    ClassDB::bind_method(D_METHOD("create_file_from_ref", "new_file", "duplicate"), &VirtFileSystem::create_file_from_ref);
+    ClassDB::bind_method(D_METHOD("create_file_from_ref", "file_ref", "new_filename", "duplicate"), &VirtFileSystem::create_file_from_ref, DEFVAL(false));
 }
 
 VIRT_CALL_WRAPPER1R(Ref<VirtFile>, VirtFileSystem, find_file, String, filename)
 VIRT_CALL_WRAPPER2R(Ref<VirtFile>, VirtFileSystem, create_file, String, filename, FileMode, new_file_mode)
 VIRT_CALL_WRAPPER1R(VirtFSResult, VirtFileSystem, delete_file, String, filename)
-VIRT_CALL_WRAPPER2R(Ref<VirtFile>, VirtFileSystem, create_file_from_ref, Ref<VirtFile>, new_file, bool, duplicate)
+VIRT_CALL_WRAPPER3R(Ref<VirtFile>, VirtFileSystem, create_file_from_ref, Ref<VirtFile>, file_ref, String, new_filename, bool, duplicate)
