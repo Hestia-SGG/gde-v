@@ -58,6 +58,9 @@ void VirtFile::_bind_methods(){
 
     GDVIRTUAL_BIND(_get_handle, "flags");
     ClassDB::bind_method(D_METHOD("get_handle", "flags"), &VirtFile::get_handle);
+
+    GDVIRTUAL_BIND(_get_size);
+    ClassDB::bind_method(D_METHOD("get_size"), &VirtFile::get_size);
 }
 
 VIRT_CALL_WRAPPER1R(Ref<VirtFileHandle>, VirtFile, get_handle, FileAccess::ModeFlags, flags)

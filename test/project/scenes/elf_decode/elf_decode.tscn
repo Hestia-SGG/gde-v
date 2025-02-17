@@ -1,8 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://c7w4o4wh7dfb4"]
+[gd_scene load_steps=4 format=3 uid="uid://c7w4o4wh7dfb4"]
 
 [ext_resource type="Script" path="res://scenes/elf_decode/elf_decode.gd" id="1_i363e"]
 
+[sub_resource type="HostFileSystem" id="HostFileSystem_1hba6"]
+host_directory_path = "C:/Users/gwent/AppData/Roaming/Godot/app_userdata/Test GDE-V/test_folder"
+
+[sub_resource type="VirtFSDispatcher" id="VirtFSDispatcher_56xam"]
+fs_handlers = Array[VirtFileSystem]([SubResource("HostFileSystem_1hba6")])
+
 [node name="ElfDecode" type="Node2D"]
 script = ExtResource("1_i363e")
+fs_handler = SubResource("VirtFSDispatcher_56xam")
 
 [node name="ABIHart" type="ABIHart" parent="."]

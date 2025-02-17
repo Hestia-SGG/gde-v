@@ -21,10 +21,12 @@ void RVBusDevice::_bind_methods(){
     GDVIRTUAL_BIND(_write, "offset", "new_data");
     GDVIRTUAL_BIND(_get_size);
     GDVIRTUAL_BIND(_set_size, "new_size");
+    GDVIRTUAL_BIND(_find_byte, "to_find", "offset_to_start")
     ClassDB::bind_method(D_METHOD("read", "offset", "size"), &RVBusDevice::read);
     ClassDB::bind_method(D_METHOD("write", "offset", "new_data"), &RVBusDevice::write);
     ClassDB::bind_method(D_METHOD("get_size"), &RVBusDevice::get_size);
     ClassDB::bind_method(D_METHOD("set_size", "new_size"), &RVBusDevice::set_size);
+    ClassDB::bind_method(D_METHOD("find_byte", "to_find", "offset_to_start"), &RVBusDevice::find_byte);
 
     // Bind enum values into Godot. They'll show up under the class instead of the global level
     // because it's easier than attempting to add something to global.
@@ -32,6 +34,9 @@ void RVBusDevice::_bind_methods(){
     BIND_ENUM_CONSTANT(BAD)
     BIND_ENUM_CONSTANT(BAD_ALIGN)
     BIND_ENUM_CONSTANT(PAGEFAULT)
+
+    ClassDB::bind_method(D_METHOD("get_string_from_memory", "offset"), &RVBusDevice::get_string_from_memory);
+    ClassDB::bind_method(D_METHOD("set_string_to_memory", "offset", "to_set"), &RVBusDevice::set_string_to_memory);
 }
 
 /**
@@ -161,6 +166,24 @@ RVMemResult RVBusDevice::set_size(int64_t new_size){
     return RVMemResult::BAD;
 }
 
+// Newer way to define the virtual callers
+VIRT_CALL_WRAPPER2R(int64_t, RVBusDevice, find_byte, int64_t, to_find, int64_t, offset_to_start)
+
+String RVBusDevice::get_string_from_memory(int64_t offset){
+    int64_t end_offset = this->find_byte(0, offset);
+    if(end_offset == -1) return "";
+
+    PackedByteArray to_convert = this->read(offset, end_offset-offset);
+    return to_convert.get_string_from_utf8();
+}
+
+RVMemResult RVBusDevice::set_string_to_memory(int64_t offset, String to_set){
+    PackedByteArray set_data = to_set.to_utf8_buffer();
+    // add null byte at the end
+    set_data.append(0);
+    return this->write(offset, set_data);
+}
+
 RVMemoryDevice::RVMemoryDevice(){
     this->read_only = false;
 }
@@ -208,6 +231,10 @@ RVMemResult RVMemoryDevice::_set_size(int64_t new_size){
     //TODO: Figure out what this really returns
     this->data.resize(new_size);
     return RVMemResult::MEM_OK;
+}
+
+int64_t RVMemoryDevice::_find_byte(int64_t to_find, int64_t offset_to_start){
+    return this->data.find(to_find, offset_to_start);
 }
 
 /**

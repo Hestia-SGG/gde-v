@@ -135,7 +135,7 @@ protected:
     virtual Ref<VirtFile> _create_file(String filename, FileMode new_file_mode){ return nullptr; }
     virtual VirtFSResult _delete_file(String filename){ return VFS_GENERIC_ERROR; }
 
-    virtual Ref<VirtFile> _create_file_from_ref(Ref<VirtFile> file_ref, String new_filename, bool duplicate = false){ return nullptr; }
+    virtual Ref<VirtFile> _create_file_from_ref(Ref<VirtFile> old_file, String new_filename, bool duplicate = false){ return nullptr; }
 public:
     VirtFileSystem(){}
     ~VirtFileSystem(){}
@@ -149,7 +149,7 @@ public:
 
     //Specifically for copy and move support
     GDVIRTUAL3R(Ref<VirtFile>, _create_file_from_ref, Ref<VirtFile>, String, bool)
-    Ref<VirtFile> create_file_from_ref(Ref<VirtFile> file_ref, String new_filename, bool duplicate = false);
+    Ref<VirtFile> create_file_from_ref(Ref<VirtFile> old_file, String new_filename, bool duplicate = false);
 };
 
 class VirtFSDispatcher : public Resource{
@@ -165,8 +165,9 @@ public:
     VirtFSDispatcher();
     ~VirtFSDispatcher();
 
-    bool add_handler(Ref<VirtFileSystem> new_handler);
-    bool remove_handler(Ref<VirtFileSystem> handler_to_remove);
+    //bool add_handler(Ref<VirtFileSystem> new_handler);
+    //bool remove_handler(Ref<VirtFileSystem> handler_to_remove);
+    GET_SET(fs_handlers, TypedArray<VirtFileSystem>)
 
     Ref<VirtFile> find_file(String filename);
     Ref<VirtFile> create_file(String filename, FileMode new_file_mode);

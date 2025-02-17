@@ -45,10 +45,11 @@ public:
 
     // GDVIRTUALx[RC] are macros that create "virtual" functions. These are defined in the engine
     // as virtual, but that really only applies to GDScript or calling through object.call[p/_deferred].
-    GDVIRTUAL2R(Variant, _read, int64_t, int64_t);
-    GDVIRTUAL2R(RVMemResult, _write, int64_t, PackedByteArray);
-    GDVIRTUAL0R(int64_t, _get_size);
-    GDVIRTUAL1R(RVMemResult, _set_size, int64_t);
+    GDVIRTUAL2R(Variant, _read, int64_t, int64_t)
+    GDVIRTUAL2R(RVMemResult, _write, int64_t, PackedByteArray)
+    GDVIRTUAL0R(int64_t, _get_size)
+    GDVIRTUAL1R(RVMemResult, _set_size, int64_t)
+    GDVIRTUAL2R(int64_t, _find_byte, int64_t, int64_t)
 
     // Adding the default definition here allows subclass overrides to be called without binding them
     // into the Godot engine through ClassDB::bind_method or bind_virtual_method.
@@ -56,6 +57,7 @@ public:
 	virtual RVMemResult _write(int64_t offset, PackedByteArray new_data){ return RVMemResult::BAD; }
     virtual int64_t _get_size(){ return -1; }
 	virtual RVMemResult _set_size(int64_t new_size){ return RVMemResult::BAD; }
+    virtual int64_t _find_byte(int64_t to_find, int64_t offset_to_start){ return -1; }
 
     // Wrapper functions that call the underlying _ versions. NOTE: All offsets will be passed in relative
     // to the device's start, not global start.
@@ -63,6 +65,10 @@ public:
     RVMemResult write(int64_t offset, PackedByteArray new_data);
     int64_t get_size();
     RVMemResult set_size(int64_t new_size);
+    int64_t find_byte(int64_t to_find, int64_t offset_to_start);
+
+    String get_string_from_memory(int64_t offset);
+    RVMemResult set_string_to_memory(int64_t offset, String to_set);
 };
 
 /**
@@ -92,6 +98,7 @@ public:
 	virtual RVMemResult _write(int64_t offset, PackedByteArray new_data) override;
 	virtual int64_t _get_size() override;
 	virtual RVMemResult _set_size(int64_t new_size) override;
+    virtual int64_t _find_byte(int64_t to_find, int64_t offset_to_start) override;
 
     // Getter/setter for read_only property.
     bool get_read_only();

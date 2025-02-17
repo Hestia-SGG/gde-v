@@ -2,6 +2,8 @@ class_name ElfDecode extends Node2D
 
 var elf_file = "res://assets/roms/testing"
 
+@export var fs_handler : VirtFSDispatcher
+
 func int32_to_uint32(value: int):
 	var temp: PackedByteArray
 	temp.resize(4)
@@ -113,7 +115,22 @@ func _ready():
 	
 	var _debug = hart.bus_read(elf_file_in.header.entry_point, 12)
 	
-	var fs_dispatcher = VirtFSDispatcher.new()
+	var test_file = fs_handler.find_file("/testing.txt");
+	var test_handle = test_file.get_handle(FileAccess.ModeFlags.READ);
+	var test_file_size = test_file.get_size()
+	var test_read_data = test_handle.read(test_file_size)
+	test_handle.seek(2, VirtFileHandle.VFS_SEEK_SET)
+	test_read_data = test_handle.read(test_file_size)
+	
+	var new_folder = fs_handler.create_file("/test_folder", VirtFile.FileMode.FM_DIR)
+	var new_file = fs_handler.create_file("/test_folder/hi.txt", VirtFile.FileMode.FM_REG)
+	var new_handle = new_file.get_handle(FileAccess.READ_WRITE)
+	new_handle.write("Hi!!!!\r\n".to_ascii_buffer());
+	new_handle.flush()
+	new_handle.close()
+	
+	var delete_ret = fs_handler.delete_file("/test_folder/hi.txt")
+	delete_ret = fs_handler.delete_file("/test_folder")
 	pass
 
 func perform_hart_step():

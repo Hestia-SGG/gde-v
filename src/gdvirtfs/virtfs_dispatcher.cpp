@@ -3,8 +3,9 @@
 using namespace godot;
 
 void VirtFSDispatcher::_bind_methods(){
-    ClassDB::bind_method(D_METHOD("add_handler", "new_handler"), &VirtFSDispatcher::add_handler);
-    ClassDB::bind_method(D_METHOD("remove_handler", "handler_to_remove"), &VirtFSDispatcher::remove_handler);
+    BIND_GET_SET_HINT(fs_handlers, VirtFSDispatcher, Variant::ARRAY, PROPERTY_HINT_TYPE_STRING, "VirtFileSystem");
+    //ClassDB::bind_method(D_METHOD("add_handler", "new_handler"), &VirtFSDispatcher::add_handler);
+    //ClassDB::bind_method(D_METHOD("remove_handler", "handler_to_remove"), &VirtFSDispatcher::remove_handler);
     ClassDB::bind_method(D_METHOD("find_file", "filename"), &VirtFSDispatcher::find_file);
     ClassDB::bind_method(D_METHOD("create_file", "filename", "new_file_mode"), &VirtFSDispatcher::create_file);
     ClassDB::bind_method(D_METHOD("delete_file", "filename"), &VirtFSDispatcher::delete_file);
@@ -20,20 +21,6 @@ VirtFSDispatcher::VirtFSDispatcher(){
 
 VirtFSDispatcher::~VirtFSDispatcher(){
     
-}
-
-bool VirtFSDispatcher::add_handler(Ref<VirtFileSystem> new_handler){
-    if(this->fs_handlers.has(new_handler)) return false;
-
-    this->fs_handlers.push_back(new_handler);
-    return true;
-}
-
-bool VirtFSDispatcher::remove_handler(Ref<VirtFileSystem> handler_to_remove){
-    if(!this->fs_handlers.has(handler_to_remove)) return false;
-
-    this->fs_handlers.erase(handler_to_remove);
-    return true;
 }
 
 Ref<VirtFile> VirtFSDispatcher::find_file(String filename){
@@ -76,7 +63,7 @@ VirtFSResult VirtFSDispatcher::delete_file(String filename){
         if(cur_fs.is_null()) continue;
 
         to_return = cur_fs->delete_file(filename_normalized);
-        if(to_return == VFS_OK) break;
+        if(to_return == VFS_OK) return VFS_OK;
     }
 
     // Failed to service

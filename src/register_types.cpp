@@ -33,6 +33,7 @@ void initialize_gdev_module(ModuleInitializationLevel p_level) {
 
 	GDREGISTER_CLASS(HostFileHanlde);
 	GDREGISTER_CLASS(HostFile);
+	GDREGISTER_CLASS(HostFileSystem);
 }
 
 // Standard uninitialization function for Godot.
