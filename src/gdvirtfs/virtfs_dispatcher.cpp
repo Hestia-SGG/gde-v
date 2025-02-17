@@ -3,7 +3,7 @@
 using namespace godot;
 
 void VirtFSDispatcher::_bind_methods(){
-    BIND_GET_SET_HINT(fs_handlers, VirtFSDispatcher, Variant::ARRAY, PROPERTY_HINT_TYPE_STRING, "VirtFileSystem");
+    BIND_GET_SET_HINT(fs_handlers, VirtFSDispatcher, Variant::ARRAY, PROPERTY_HINT_TYPE_STRING, "VirtFileSystem", "new_val");
     //ClassDB::bind_method(D_METHOD("add_handler", "new_handler"), &VirtFSDispatcher::add_handler);
     //ClassDB::bind_method(D_METHOD("remove_handler", "handler_to_remove"), &VirtFSDispatcher::remove_handler);
     ClassDB::bind_method(D_METHOD("find_file", "filename"), &VirtFSDispatcher::find_file);
@@ -16,7 +16,7 @@ void VirtFSDispatcher::_bind_methods(){
 }
 
 VirtFSDispatcher::VirtFSDispatcher(){
-    this->fs_handlers = {};
+    this->fs_handlers = TypedArray<VirtFileSystem>();
 }
 
 VirtFSDispatcher::~VirtFSDispatcher(){

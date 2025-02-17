@@ -3,7 +3,7 @@
 using namespace godot;
 
 void HostFileHanlde::_bind_methods(){
-    BIND_GET_SET_HINT(host_file, HostFileHanlde, OBJECT, PROPERTY_HINT_TYPE_STRING, "FileAccess")
+    BIND_GET_SET_HINT(host_file, HostFileHanlde, OBJECT, PROPERTY_HINT_TYPE_STRING, "FileAccess", "new_host_file")
 }
 
 PackedByteArray HostFileHanlde::_read(int64_t size){

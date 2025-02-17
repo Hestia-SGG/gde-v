@@ -3,7 +3,7 @@
 using namespace godot;
 
 void HostFile::_bind_methods(){
-    BIND_GET_SET(host_mapped_path, HostFile, STRING)
+    BIND_GET_SET(host_mapped_path, HostFile, STRING, "new_path")
 }
 
 Ref<VirtFileHandle> HostFile::_get_handle(FileAccess::ModeFlags flags){
